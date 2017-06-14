@@ -1,0 +1,12 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="code_metrics:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/code_metrics_jar</output-path>
+    <root id="archive" name="code_metrics.jar">
+      <element id="module-output" name="code_metrics" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../ScalaParser/out/artifacts/ScalaParser_jar/ScalaParser.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../PythonParser/out/artifacts/PythonParser_jar/PythonParser.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../SwiftParser/out/artifacts/SwiftParser_jar/SwiftParser.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/mysql/mysql-connector-java/5.1.38/mysql-connector-java-5.1.38.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
