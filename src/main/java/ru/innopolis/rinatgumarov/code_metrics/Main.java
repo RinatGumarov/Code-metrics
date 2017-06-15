@@ -2,6 +2,7 @@ package ru.innopolis.rinatgumarov.code_metrics;
 
 import ru.innopolis.rinatgumarov.code_metrics.csharp.CSAdapter;
 import ru.innopolis.rinatgumarov.code_metrics.python.PythonAdapter;
+import ru.innopolis.rinatgumarov.code_metrics.ruby.RubyAdapter;
 import ru.innopolis.rinatgumarov.code_metrics.scala.ScalaAdapter;
 import ru.innopolis.rinatgumarov.code_metrics.swift.SwiftAdapter;
 
@@ -13,6 +14,9 @@ public class Main {
     public static void main(String[] args){
         try {
             switch (args[0]){
+                case "-ruby" :
+                    RubyAdapter.run(args[1]);
+                    break;
                 case "-csharp" :
                     CSAdapter.run(args[1]);
                     break;
