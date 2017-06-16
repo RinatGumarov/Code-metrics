@@ -1,16 +1,19 @@
 package ru.innopolis.rinatgumarov.code_metrics.db;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.sql.*;
+import java.util.Properties;
 
 /**
  * Created by Rinat on 11.06.17.
  */
 public class Database {
     private static Database INSTANCE;
-    private static final String url = "jdbc:mysql://localhost:3306/code_metrics?useSSL=false";
-    private static final String user = "root";
-    private static final String password = "NSholy24";
+
     private static Statement stmt;
+
+
 
     public static Database getINSTANCE(){
         if (INSTANCE == null)
@@ -20,9 +23,23 @@ public class Database {
 
     private Database() {
         try {
-            Connection con = DriverManager.getConnection(url, user, password);
+            Properties props = new Properties();
+            FileInputStream in = new FileInputStream("src/main/java/ru/innopolis/rinatgumarov/code_metrics/db/db.properties");
+            props.load(in);
+            in.close();
+
+            String driver = props.getProperty("jdbc.driver");
+            if (driver != null) {
+                Class.forName(driver) ;
+            }
+
+            String url = props.getProperty("jdbc.url");
+            String username = props.getProperty("jdbc.username");
+            String password = props.getProperty("jdbc.password");
+
+            Connection con = DriverManager.getConnection(url, username, password);
             stmt = con.createStatement();
-        } catch (SQLException e) {
+        } catch (SQLException | IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
