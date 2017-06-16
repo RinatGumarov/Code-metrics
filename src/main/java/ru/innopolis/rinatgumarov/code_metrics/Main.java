@@ -1,6 +1,7 @@
 package ru.innopolis.rinatgumarov.code_metrics;
 
 import ru.innopolis.rinatgumarov.code_metrics.csharp.CSAdapter;
+import ru.innopolis.rinatgumarov.code_metrics.erlang.ErlangAdapter;
 import ru.innopolis.rinatgumarov.code_metrics.python.PythonAdapter;
 import ru.innopolis.rinatgumarov.code_metrics.ruby.RubyAdapter;
 import ru.innopolis.rinatgumarov.code_metrics.scala.ScalaAdapter;
@@ -14,6 +15,8 @@ public class Main {
     public static void main(String[] args){
         try {
             switch (args[0]){
+                case "-erlang" :
+                    ErlangAdapter.run(args[1]);
                 case "-ruby" :
                     RubyAdapter.run(args[1]);
                     break;
@@ -36,5 +39,6 @@ public class Main {
         catch (ArrayIndexOutOfBoundsException e){
             System.out.println("usage ..");
         }
+
     }
 }
