@@ -4,6 +4,7 @@ import csmc.javacc.parse.ParseDriver;
 import csmc.metrics.CKMetric;
 import csmc.metrics.CKMetricsExtractor;
 import csmc.outformat.CSVBuilder;
+import org.apache.log4j.Logger;
 import ru.innopolis.rinatgumarov.code_metrics.db.Database;
 
 import java.io.File;
@@ -16,6 +17,9 @@ import java.util.stream.Collectors;
  * Created by Rinat on 13.06.17.
  */
 public class CSAdapter {
+
+    private static Logger logger = Logger.getLogger(CSAdapter.class.getName());
+
     public static void run(String path) {
         File d = new File(path);
         List<File> files = Arrays.stream(d.listFiles())
@@ -43,9 +47,9 @@ public class CSAdapter {
                                 metric.getRfc() + ", " +
                                 metric.getLcom() +
                                 ");";
-                        System.out.println(query);
                         Database db = Database.getINSTANCE();
                         db.write(query);
+                        logger.info(file.getAbsolutePath() + " - successful");
                     }
                 }
             }

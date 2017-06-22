@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
-  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8" inherit-compiler-output="false">
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8">
     <output url="file://$MODULE_DIR$/target/classes" />
     <output-test url="file://$MODULE_DIR$/target/test-classes" />
     <content url="file://$MODULE_DIR$">
@@ -20,7 +20,6 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="Maven: mysql:mysql-connector-java:5.1.38" level="project" />
     <orderEntry type="module-library">
       <library>
         <CLASSES>
@@ -66,5 +65,53 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../ClojureParser/out/artifacts/ClojureParser_jar/ClojureParser.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../PerlParser/out/artifacts/PerlParser_jar/PerlParser.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../PHPParser/out/artifacts/PHPParser_jar/PHPParser.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../JavascriptParser/out/artifacts/JavascriptParser_jar/JavascriptParser.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="library" name="Maven: python-parser:python-parser:1.0" level="project" />
+    <orderEntry type="library" name="Maven: clojure-parser:clojure-parser:1.0" level="project" />
+    <orderEntry type="library" name="Maven: csharp-parser:csharp-parser:1.0" level="project" />
+    <orderEntry type="library" name="Maven: erlang-parser:erlang-parser:1.0" level="project" />
+    <orderEntry type="library" name="Maven: javascript-parser:javascript-parser:1.0" level="project" />
+    <orderEntry type="library" name="Maven: perl-parser:perl-parser:1.0" level="project" />
+    <orderEntry type="library" name="Maven: php-parser:php-parser:1.0" level="project" />
+    <orderEntry type="library" name="Maven: ruby-parser:ruby-parser:1.0" level="project" />
+    <orderEntry type="library" name="Maven: scala-parser:scala-parser:1.0" level="project" />
+    <orderEntry type="library" name="Maven: swift-parser:swift-parser:1.0" level="project" />
+    <orderEntry type="library" name="Maven: mysql:mysql-connector-java:5.1.38" level="project" />
+    <orderEntry type="library" name="Maven: log4j:log4j:1.2.17" level="project" />
   </component>
 </module>

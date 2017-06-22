@@ -21,12 +21,85 @@
     </build>
 
     <dependencies>
+
+        <!--To add next dependencies you should run install_dependencies.sh script-->
+
+        <dependency>
+            <groupId>python-parser</groupId>
+            <artifactId>python-parser</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>clojure-parser</groupId>
+            <artifactId>clojure-parser</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>csharp-parser</groupId>
+            <artifactId>csharp-parser</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>erlang-parser</groupId>
+            <artifactId>erlang-parser</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>javascript-parser</groupId>
+            <artifactId>javascript-parser</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>perl-parser</groupId>
+            <artifactId>perl-parser</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>php-parser</groupId>
+            <artifactId>php-parser</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>ruby-parser</groupId>
+            <artifactId>ruby-parser</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>scala-parser</groupId>
+            <artifactId>scala-parser</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>swift-parser</groupId>
+            <artifactId>swift-parser</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+
         <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>5.1.38</version>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/log4j/log4j -->
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.17</version>
+        </dependency>
+
+
 
 
     </dependencies>

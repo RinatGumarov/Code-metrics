@@ -1,5 +1,7 @@
 package ru.innopolis.rinatgumarov.code_metrics.db;
 
+import org.apache.log4j.Logger;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.*;
@@ -10,6 +12,8 @@ import java.util.Properties;
  */
 public class Database {
     private static Database INSTANCE;
+
+    static Logger logger = Logger.getLogger(Database.class.getName());
 
     private static Statement stmt;
 
@@ -24,7 +28,7 @@ public class Database {
     private Database() {
         try {
             Properties props = new Properties();
-            FileInputStream in = new FileInputStream("src/main/java/ru/innopolis/rinatgumarov/code_metrics/db/db.properties");
+            FileInputStream in = new FileInputStream("src/main/resources/db.properties");
             props.load(in);
             in.close();
 
@@ -39,8 +43,9 @@ public class Database {
 
             Connection con = DriverManager.getConnection(url, username, password);
             stmt = con.createStatement();
+            logger.info("Connection to database successful");
         } catch (SQLException | IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+            logger.info("Connection to database failed with message: " + e.getMessage());
         }
     }
 
@@ -48,7 +53,7 @@ public class Database {
         try {
             stmt.execute(query);
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.info("Writing to database failed: " + e.getMessage());
         }
     }
 }

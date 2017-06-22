@@ -1,6 +1,7 @@
 package ru.innopolis.rinatgumarov.code_metrics.erlang;
 
 import erlang.parser.Erlang;
+import org.apache.log4j.Logger;
 import ru.innopolis.rinatgumarov.code_metrics.db.Database;
 
 import java.io.File;
@@ -13,6 +14,8 @@ import java.util.stream.Collectors;
  * Created by Rinat on 16.06.17.
  */
 public class ErlangAdapter {
+
+    private static Logger logger = Logger.getLogger(ErlangAdapter.class.getName());
 
     public static void run(String path) {
         File d = new File(path);
@@ -44,14 +47,15 @@ public class ErlangAdapter {
                                     ");";
                             Database db = Database.getINSTANCE();
                             db.write(query);
+                            logger.info(file.getAbsolutePath() + " - successful");
                         }
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        logger.info("Reading file " + file.getAbsolutePath() + " failed:" + e.getMessage());
                     }
                 }
         }
         catch (NullPointerException e){
-            System.out.println("Directory " + path + " is empty.");
+            logger.info("Directory " + path + " is empty.");
         }
     }
 }
