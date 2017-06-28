@@ -51,9 +51,6 @@ public class JSAdapter {
                                     parser.numberOfLoops() + ", " +
                                     parser.numberOfConditions() +
                                     ");";
-                            FileWriter fileWriter = new FileWriter("ololo.txt");
-                            fileWriter.write("oloo");
-                            fileWriter.close();
                             Database db = Database.getINSTANCE();
                             db.write(query);
                             logger.info(file.getAbsolutePath() + " - successful");
