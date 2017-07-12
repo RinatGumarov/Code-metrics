@@ -28,6 +28,7 @@ public class ClojureAdapter {
             List<File> files = Arrays.stream(d.listFiles())
                     .filter(file -> file.isDirectory() || file.getName().endsWith(".clj"))
                     .collect(Collectors.toList());
+
             if (!files.isEmpty())
                 for (File file : files) {
                     try {

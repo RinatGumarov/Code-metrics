@@ -58,7 +58,7 @@ public class Main {
                     throw new ArrayIndexOutOfBoundsException();
             }
         } catch (ArrayIndexOutOfBoundsException e) {
-            System.out.println("usage: java -jar code_metrics.jar (-lang) path/to/sources");
+            System.out.println("usage: java -jar code_metrics.jar -lang path/to/sources");
         }
     }
 }

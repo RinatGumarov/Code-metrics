@@ -46,6 +46,8 @@ public class Database {
             logger.info("Connection to database successful");
         } catch (SQLException | IOException | ClassNotFoundException e) {
             logger.info("Connection to database failed with message: " + e.getMessage());
+        } catch (NullPointerException e){
+            logger.info("Wrong properties");
         }
     }
 
