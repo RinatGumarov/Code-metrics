@@ -1,0 +1,21 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine on
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php?route=$1 [L,QSA]
+</IfModule>
+<IfModule mod_php5.c>
+    php_value output_buffering 4096
+    php_flag implicit_flush off
+    php_value post_max_size 8M
+    php_value upload_max_filesize 8M
+    php_flag auto_globals_jit true
+    php_flag register_argc_argv false
+    php_flag register_long_arrays false
+    php_flag register_globals false
+    php_flag mail.add_x_header false
+    php_flag magic_quotes_gpc false
+    php_value max_input_time 60
+    php_flag short_open_tag off
+    php_flag always_populate_raw_post_data off
+</IfModule>

@@ -1,0 +1,5 @@
+filename, Lines Of Code, Single Line Comments, Multi Line Comments, Number Of Methods, Number Of Public Methods, Number Of Class Attributes, Number Of Public Attributes, Class Size, Class Interface Size, Cyclomatic Complexity, Weighted Method Count
+test_suite1/database.php, 19, 9, 0, 10, 10, 0, 0, 10, 10, 1, 16
+test_suite1/firewall.php, 165, 129, 3, 7, 6, 1, 1, 7, 7, 21, 9
+test_suite1/system_port_gen.php, 33, 19, 0, 4, 4, 1, 1, 5, 5, 0, 4
+test_suite1/test.php, 56, 4, 0, 15, 6, 1, 1, 7, 7, 8, 7

@@ -1,0 +1,9 @@
+Filename	Date Time	Methods	Statements	Classes	Interfaces	Attributes	Loops	Conditions	Reuse Ratio	Children	Specialization Ratio	Depth of Inheritance tree	Method Inheritance Factor	Attributes Inheritance Factor	Number of overridden methods	Lack of cohesion methods	Tight class cohesion	
+code1.rb	2017-04-25_18:00:33	4	24	1	0	1	0	0	0.0	0	0.0	0	0.0	0.0	0	0	1.0	
+code2.rb	2017-04-25_18:00:33	10	37	2	0	3	0	0	0.5	1	1.0	1	0.375	0.25	2	0	1.0	
+code3.rb	2017-04-25_18:00:33	0	14	0	0	0	0	4	1.0	0	0.0	0	0.0	0.0	0	0	0.0	
+code4.rb	2017-04-25_18:00:33	0	9	0	0	0	0	3	1.0	0	0.0	0	0.0	0.0	0	0	0.0	
+code5.rb	2017-04-25_18:00:33	0	6	0	0	0	0	0	1.0	0	0.0	0	0.0	0.0	0	0	0.0	
+code6.rb	2017-04-25_18:00:33	0	11	0	0	0	2	1	1.0	0	0.0	0	0.0	0.0	0	0	0.0	
+code7.rb	2017-04-25_18:00:33	5	21	2	1	3	1	0	0.0	0	0.0	0	0.0	0.0	0	0	1.0	
+code8.rb	2017-04-25_18:00:33	0	30	0	0	0	2	0	1.0	0	0.0	0	0.0	0.0	0	0	0.0	

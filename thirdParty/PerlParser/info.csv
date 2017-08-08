@@ -1,0 +1,5 @@
+File name, Lines of code, Scalars, Arrays, Hashes, Branches (non-cyclic), Cycles, String operators (. lt gt ne etc), Numeric operators (+ < > != etc), Array gets, Hash gets, Regexes, Functions, Cyclomatic complexity
+test.pl, 166, 166, 15, 1, 29, 6, 462, 227, 12, 7, 14, 12, 35
+test2.pl, 17, 7, 1, 0, 2, 0, 40, 20, 0, 0, 0, 1, 2
+test3.pl, 49, 35, 3, 3, 5, 0, 159, 80, 0, 15, 4, 3, 5
+test4.pl, 6, 8, 2, 0, 0, 1, 27, 13, 0, 0, 0, 1, 1

@@ -1,0 +1,647 @@
+/**
+ * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
+ */options{  static = false;
+  DEBUG_PARSER = true;}PARSER_BEGIN(Erlang)package erlang.parser;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+public class Erlang{  public static void main(String args[]) throws IOException {
+    	Erlang parser = new Erlang(System.in);
+        if (args.length == 1) {
+            System.out.println("Parser:  Reading from folder " + args[0] + " . . .");
+            File[] files = getFiles(args[0]);
+            FileWriter fw = new FileWriter("metrics.csv", false);
+            fw.write("File Name, Lines of Code, Number of Comments, Number of Modules, Number of Imports, Number of Exports\n");
+            gather_metrics(files, fw);
+            fw.close();
+
+        } else return;
+    }
+
+    static void gather_metrics(File[] files, FileWriter metrics) throws IOException {
+        String code = "";
+        int linesOfCode;
+        int numberOfComments;
+        int numberOfModules;
+        int numberOfImports;
+        int numberOfExports;
+        for (int i = 0; i < files.length; i++) {
+            code = getStringFromFile(files[i]);
+            linesOfCode = getLinesOfCode(code);
+            numberOfComments = getNumberOfComments(code);
+            numberOfImports = getNumberOfImports(code);
+        	numberOfExports = getNumberOfExports(code);
+        	numberOfModules = getNumberOfModules(code);
+            metrics.write(files[i].getName() + "," + linesOfCode + "," + numberOfComments + "," + numberOfModules + "," + numberOfImports + "," + numberOfExports + "\n");
+
+        }
+    }
+
+    static File[] getFiles(String folder) throws IOException {
+        File dir = new File(folder);
+        File[] files = dir.listFiles(new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                return name.toLowerCase().endsWith(".erl");
+            }
+        });
+        return files;
+    }
+
+    static String getStringFromFile(File file) throws IOException {
+        String code = "";
+        InputStream is = new FileInputStream(file);
+        BufferedReader buf = new BufferedReader(new InputStreamReader(is));
+        String line = buf.readLine();
+        StringBuilder sb = new StringBuilder();
+        while (line != null) {
+            sb.append(line).append("\n");
+            line = buf.readLine();
+        }
+        code = sb.toString();
+        buf.close();
+        return code;
+    }
+
+    static int getLinesOfCode(String code) {
+        String[] lines = code.split("\r\n|\r|\n");
+        return lines.length;
+    }
+
+    static int getNumberOfComments(String code) {
+        Pattern pattern = Pattern.compile("% [^\r\n]*\r?\n");
+        Matcher matcher = pattern.matcher(code);
+
+        int count = 0;
+        while (matcher.find())
+            count++;
+
+        return count;
+    }    static int getNumberOfImports(String code) {
+        Pattern pattern = Pattern.compile("-import([^\r\n]*).");
+        Matcher matcher = pattern.matcher(code);
+
+        int count = 0;
+        while (matcher.find())
+            count++;
+
+        return count;
+    }
+    static int getNumberOfExports(String code) {
+        Pattern pattern = Pattern.compile("-export([^\r\n]*).");
+        Matcher matcher = pattern.matcher(code);
+
+        int count = 0;
+        while (matcher.find())
+            count++;
+
+        return count;
+    }
+    static int getNumberOfModules(String code) {
+        Pattern pattern = Pattern.compile("-[a-z]+([^\r\n]*).");
+        Matcher matcher = pattern.matcher(code);
+
+        int count = 0;
+        while (matcher.find())
+            count++;
+
+        return count;
+    }  }PARSER_END(Erlang)SKIP :
+        {
+        " "
+        | "\t"
+        | "\n"
+        | "\r"
+        //| < "%" (~["\r","\n"])* ("\r")? "\n" >
+        }
+/** Terminals */
+        TOKEN:
+        {
+
+        <TOKEN_LPAREN: "(">
+        | <TOKEN_RPAREN: ")">
+        | <TOKEN_COMMA: ",">
+        | <TOKEN_MINUSGREATER: "->">
+        | <TOKEN_LCURLYBRACE: "{">
+        | <TOKEN_RCURLYBRACE: "}">
+        | <TOKEN_LSQUAREPAREN: "[">
+        | <TOKEN_RSQUAREPAREN: "]">
+        | <TOKEN_OR: "|">
+        | <TOKEN_OROR: "||">
+        | <TOKEN_LESSMINUS: "<-">
+        | <TOKEN_SEMICOLON: ";">
+        | <TOKEN_COLON: ":">
+        | <TOKEN_HASH: "#">
+        | <TOKEN_DOT: ".">
+
+        | <TOKEN_AFTER: "after">
+        | <TOKEN_BEGIN: "begin">
+        | <TOKEN_CASE: "case">
+        | <TOKEN_TRY: "try">
+        | <TOKEN_CATCH: "catch">
+        | <TOKEN_END: "end">
+        | <TOKEN_FUN: "fun">
+        | <TOKEN_IF: "if">
+        | <TOKEN_OF: "of">
+        | <TOKEN_RECEIVE: "receive">
+        | <TOKEN_WHEN: "when">
+
+        | <TOKEN_ANDALSO: "andalso">
+        | <TOKEN_ORELSE: "orelse">
+
+        | <TOKEN_BNOT: "bnot">
+        | <TOKEN_NOT: "not">
+
+        | <TOKEN_MULT: "*">
+        | <TOKEN_DIV: "/">
+        | <TOKEN_DIVINT: "div">
+        | <TOKEN_REM: "rem">
+        | <TOKEN_BAND: "band">
+        | <TOKEN_AND: "and">
+
+        | <TOKEN_PLUS: "+">
+        | <TOKEN_MINUS: "-">
+        | <TOKEN_BOR: "bor">
+        | <TOKEN_BXOR: "bxor">
+        | <TOKEN_BSL: "bsl">
+        | <TOKEN_BSR: "bsr">
+        | <TOKEN_ORW: "or">
+        | <TOKEN_XOR: "xor">
+
+        | <TOKEN_PLUSPLUS: "++">
+        | <TOKEN_MINUSMINUS: "--">
+
+        | <TOKEN_EQUALEQUAL: "==">
+        | <TOKEN_NOTEQUAL: "/=">
+        | <TOKEN_EQUALORLESS: "=<">
+        | <TOKEN_LESS: "<">
+        | <TOKEN_GREATEROREQUAL: ">=">
+        | <TOKEN_GREATER: ">">
+        | <TOKEN_EXACTLYEQUAL: "=:=">
+        | <TOKEN_EXACTLYNOTEQUAL: "=/=">
+        | <TOKEN_LESSEQUAL: "<=">
+        | <TOKEN_EQUALGREATER: "=>">
+        | <TOKEN_COLONEQUAL: ":=">
+
+        | <TOKEN_LESSLESS: "<<">
+        | <TOKEN_GREATERGREATER: ">>">
+
+        | <TOKEN_EXCLAMATION: "!">
+        | <TOKEN_EQUAL: "=">
+        | <TOKEN_COLONCOLON: "::">
+        | <TOKEN_DOTDOT: "..">
+        | <TOKEN_DOTDOTDOT: "...">
+
+        | <TOKEN_SPEC: "spec">
+        | <TOKEN_CALLBACK: "callback">
+        | <TOKEN_DOTW: "dot">
+        | <TOKEN_CHAR: "$" (("\\")? (~["\r","\n"]) | "\\" ["0"-"9"] ["0"-"9"] ["0"-"9"])>
+        | <TOKEN_INTEGER: ("-")? (["0"-"9"])+ (<TOKEN_HASH>(["0"-"9","a"-"z","A"-"Z"])+)?>
+        | <TOKEN_FLOAT: ("-")? (["0"-"9"])+ "." (["0"-"9"])+  (["E","e"] (["+","-"])? (["0"-"9"])+)?>
+        | <TOKEN_ATOM: ["a"-"z","@"](["0"-"9","a"-"z","A"-"Z","_", "@"])* >
+        | <TOKEN_STRING: "\"\"">
+        | <TOKEN_VAR: ((["A"-"Z"])| ("_"<NAMECHAR>))(["0"-"9","a"-"z","A"-"Z", "_"])*>
+            | <#NAMECHAR: (["0"-"9","a"-"z","A"-"Z","_", "@"])+>
+
+        }
+
+
+
+/** Nonterminals */
+		void forms(): { } {
+			(			  form())+ <EOF>
+		}
+        void form(): {} {
+           LOOKAHEAD(1000) attribute() <TOKEN_DOT>
+        | LOOKAHEAD(1000)function() <TOKEN_DOT>
+        }
+
+        void attribute(): {} {
+            LOOKAHEAD(1000) <TOKEN_MINUS> <TOKEN_ATOM> attr_val()
+        | LOOKAHEAD(1000) <TOKEN_MINUS> <TOKEN_ATOM> typed_attr_val()
+        | LOOKAHEAD(1000) <TOKEN_MINUS> <TOKEN_ATOM> <TOKEN_LPAREN> typed_attr_val() <TOKEN_RPAREN>
+        | LOOKAHEAD(2) <TOKEN_MINUS> <TOKEN_SPEC> type_spec()
+        | LOOKAHEAD(2) <TOKEN_MINUS> <TOKEN_CALLBACK> type_spec()
+        }
+        void attr_val(): {} {
+        LOOKAHEAD(1000) expr() (LOOKAHEAD(2) <TOKEN_COMMA> exprs())?
+        | LOOKAHEAD(1000) <TOKEN_LPAREN> expr() (LOOKAHEAD(2) <TOKEN_COMMA> exprs())? <TOKEN_RPAREN>
+        }
+
+        void function(): {} {
+            function_clauses()
+                }
+        void function_clauses(): {} {
+        function_clause() (LOOKAHEAD(2) <TOKEN_SEMICOLON> function_clause())*
+        }
+        void function_clause(): {} {
+            <TOKEN_ATOM> clause_args() LOOKAHEAD(1000) (clause_guard())? clause_body()
+        }
+
+        void clause_args(): {} {
+            argument_list()
+        }
+        void clause_guard(): {} {
+            <TOKEN_WHEN> guard()
+        }
+        void clause_body(): {} {
+            <TOKEN_MINUSGREATER> exprs()
+                }
+
+        void expr(): {} {
+            <TOKEN_CATCH> expr()
+        | expr_100()
+        }
+        void expr_100(): {} {
+            LOOKAHEAD(1000) expr_150() (LOOKAHEAD(1000) <TOKEN_EQUAL> expr_100())?
+        | LOOKAHEAD(1000) expr_150() <TOKEN_EXCLAMATION> expr_100()
+        }
+        void expr_150(): {} {
+            expr_160() (LOOKAHEAD(1000) <TOKEN_ORELSE> expr_150())?
+        }
+        void expr_160(): {} {
+            expr_200() (LOOKAHEAD(1000) <TOKEN_ANDALSO> expr_160())?
+        }
+        void expr_200(): {} {
+            expr_300() (LOOKAHEAD(1000) comp_op() expr_300())?
+        }
+        void expr_300(): {} {
+            expr_400() (LOOKAHEAD(1000) list_op() expr_300())?
+        }
+        void expr_400(): {} {
+            expr_500() (LOOKAHEAD(1000) add_op() expr_500())*
+        }
+        void expr_500(): {} {
+            expr_600() (LOOKAHEAD(1000) mult_op() expr_600())*
+        }
+        void expr_600(): {} {
+         LOOKAHEAD(1000)   prefix_op() expr_700()
+        | LOOKAHEAD(1000) map_expr()
+        | LOOKAHEAD(1000) expr_700()
+        }
+        void expr_700(): {} {
+         LOOKAHEAD(1000)   function_call()
+        |LOOKAHEAD(1000) record_expr()
+        |LOOKAHEAD(1000) expr_800()
+        }
+        void expr_800(): {} {
+          LOOKAHEAD(1000)  expr_max() (LOOKAHEAD(2)<TOKEN_COLON> expr_max())?
+        }
+
+        void expr_max(): {} {
+            <TOKEN_VAR>
+        | atomic()
+        | LOOKAHEAD(1000) list()
+        | LOOKAHEAD(1000) binary()
+        | LOOKAHEAD(1000) list_comprehension()
+        | LOOKAHEAD(1000) binary_comprehension()
+        | tuple()
+        | <TOKEN_LPAREN> expr() <TOKEN_RPAREN>
+        | <TOKEN_BEGIN> exprs() <TOKEN_END>
+        | if_expr()
+        | case_expr()
+        | receive_expr()
+        | fun_expr()
+        | try_expr()
+        }
+
+        void list(): {} {
+           LOOKAHEAD(2) <TOKEN_LSQUAREPAREN> <TOKEN_RSQUAREPAREN>
+        |LOOKAHEAD(1000) <TOKEN_LSQUAREPAREN> expr() tail()
+        }
+        void tail(): {} {
+            <TOKEN_RSQUAREPAREN>
+        | <TOKEN_OR> expr() <TOKEN_RSQUAREPAREN>
+        | <TOKEN_COMMA> expr() tail()
+        }
+
+        void list_comprehension(): {} {
+            <TOKEN_LSQUAREPAREN> expr() <TOKEN_OROR> lc_exprs() <TOKEN_RSQUAREPAREN>
+        }
+        
+        void lc_exprs(): {} {
+        lc_expr() (LOOKAHEAD(2) <TOKEN_COMMA> lc_expr())*
+        }
+
+        void lc_expr(): {} {
+        LOOKAHEAD(1000) expr() (LOOKAHEAD(2) <TOKEN_LESSMINUS> expr())?
+        | LOOKAHEAD(1000) binary() <TOKEN_LESSEQUAL> expr()
+        }
+
+        void binary_comprehension(): {} {
+            <TOKEN_LESSLESS> expr_max() <TOKEN_OROR> lc_exprs() <TOKEN_GREATERGREATER>
+        }
+
+        void tuple(): {} {
+            LOOKAHEAD(2) <TOKEN_LCURLYBRACE> <TOKEN_RCURLYBRACE>
+        | LOOKAHEAD(2) <TOKEN_LCURLYBRACE> exprs() <TOKEN_RCURLYBRACE>
+        }
+
+        void record_expr(): {} {
+        LOOKAHEAD(1000) (LOOKAHEAD(2) expr_max())? <TOKEN_HASH> <TOKEN_ATOM> (<TOKEN_DOT> <TOKEN_ATOM> | LOOKAHEAD(1000) record_tuple()) (<TOKEN_HASH> <TOKEN_ATOM> (<TOKEN_DOT> <TOKEN_ATOM> | record_tuple()))*
+        }
+        void record_tuple(): {} {
+            LOOKAHEAD(1000) <TOKEN_LCURLYBRACE> <TOKEN_RCURLYBRACE>
+        | LOOKAHEAD(1000) <TOKEN_LCURLYBRACE> record_fields() <TOKEN_RCURLYBRACE>
+        }
+        void record_fields(): {} {
+        record_field() (LOOKAHEAD(2) <TOKEN_COMMA> record_field())*
+        }
+        void record_field(): {} {
+            <TOKEN_VAR> <TOKEN_EQUAL> expr()
+        | <TOKEN_ATOM> <TOKEN_EQUAL> expr()
+        }
+
+        void map_expr(): {} {
+            LOOKAHEAD(1000) <TOKEN_HASH> map_tuple()  (LOOKAHEAD(1000)<TOKEN_HASH> map_tuple())*
+        | LOOKAHEAD(1000) expr_max() <TOKEN_HASH> map_tuple()  (LOOKAHEAD(1000)<TOKEN_HASH> map_tuple())*
+        }
+        void map_tuple(): {} {
+            LOOKAHEAD(2) <TOKEN_LCURLYBRACE> <TOKEN_RCURLYBRACE>
+        | LOOKAHEAD(2) <TOKEN_LCURLYBRACE> map_fields() <TOKEN_RCURLYBRACE>
+        }
+        void map_field(): {} {
+           LOOKAHEAD(1000) map_field_assoc()
+        | LOOKAHEAD(1000) map_field_exact()
+        }
+        void map_field_assoc(): {} {
+            map_key() <TOKEN_EQUALGREATER> expr()
+        }
+        void map_field_exact(): {} {
+            map_key() <TOKEN_COLONEQUAL> expr()
+        }
+        void map_fields(): {} {
+        map_field() (LOOKAHEAD(2) <TOKEN_COMMA> map_field())*
+        }
+        void map_key(): {} {
+            expr()
+        }
+
+        void if_expr(): {} {
+            <TOKEN_IF> if_clauses() <TOKEN_END>
+        }
+        void if_clauses(): {} {
+        if_clause() (LOOKAHEAD(2) <TOKEN_SEMICOLON> if_clause())*
+        }
+        void if_clause(): {} {
+            guard() clause_body()
+        }
+        void case_expr(): {} {
+            <TOKEN_CASE> expr() <TOKEN_OF> cr_clauses() <TOKEN_END>
+        }
+        
+        void cr_clauses(): {} {
+        cr_clause() (LOOKAHEAD(2) <TOKEN_SEMICOLON> cr_clauses())*
+        }
+        void cr_clause(): {} {
+            expr() clause_guard() clause_body()
+        }
+        void receive_expr(): {} {
+            LOOKAHEAD(3) <TOKEN_RECEIVE> cr_clauses() <TOKEN_END>
+        | LOOKAHEAD(2) <TOKEN_RECEIVE> <TOKEN_AFTER> expr() clause_body() <TOKEN_END>
+        | LOOKAHEAD(2) <TOKEN_RECEIVE> cr_clauses() <TOKEN_AFTER> expr() clause_body() <TOKEN_END>
+        }
+
+        void fun_expr(): {} {
+           LOOKAHEAD(3) <TOKEN_FUN> <TOKEN_ATOM> <TOKEN_DIV> <TOKEN_INTEGER>
+        | LOOKAHEAD(3) <TOKEN_FUN> atom_or_var() <TOKEN_COLON> atom_or_var() <TOKEN_DIV> integer_or_var()
+        | LOOKAHEAD(3) <TOKEN_FUN> fun_clauses() <TOKEN_END>
+        }
+        void fun_clause(): {} {
+            argument_list() clause_guard() clause_body()
+        | <TOKEN_VAR> argument_list() clause_guard() clause_body()
+        }
+        void fun_clauses(): {} {
+        fun_clause() (LOOKAHEAD(2) <TOKEN_SEMICOLON> fun_clause())*
+        }
+        void atom_or_var(): {} {
+            <TOKEN_ATOM> | <TOKEN_VAR>
+        }
+        void integer_or_var(): {} {
+            <TOKEN_INTEGER> | <TOKEN_VAR>
+        }
+
+        void try_expr(): {} {
+            LOOKAHEAD(1000) <TOKEN_TRY> exprs() <TOKEN_OF> cr_clauses() try_catch()
+        | LOOKAHEAD(1000) <TOKEN_TRY> exprs() try_catch()
+        }
+        void try_catch(): {} {
+        LOOKAHEAD(1000) <TOKEN_CATCH> try_clauses() <TOKEN_AFTER> exprs() <TOKEN_END>
+        | <TOKEN_AFTER> exprs() <TOKEN_END>
+        |LOOKAHEAD(1000) <TOKEN_CATCH> try_clauses() <TOKEN_END>
+        }
+        void try_clause(): {} {
+           LOOKAHEAD(1000) (LOOKAHEAD(2) atom_or_var() <TOKEN_COLON>)? expr() clause_guard() clause_body()
+        }
+        void try_clauses(): {} {
+        try_clause() (LOOKAHEAD(2) <TOKEN_SEMICOLON> try_clause())*
+        }
+
+        void function_call(): {} {
+            expr_800() argument_list()
+        }
+        void argument_list(): {} {
+          LOOKAHEAD(2)  <TOKEN_LPAREN> <TOKEN_RPAREN>
+        | LOOKAHEAD(1000) <TOKEN_LPAREN> exprs() <TOKEN_RPAREN>
+        }
+
+        void exprs(): {} {
+        expr() (LOOKAHEAD(2) <TOKEN_COMMA> expr())*
+        }
+        void guard(): {} {
+        exprs() (LOOKAHEAD(2) <TOKEN_SEMICOLON> exprs())*
+        }
+
+        void atomic(): {} {
+            <TOKEN_CHAR> | <TOKEN_INTEGER> | <TOKEN_FLOAT> | <TOKEN_ATOM> | strings()
+        }
+        void strings(): {} {
+        LOOKAHEAD(2) <TOKEN_STRING> (LOOKAHEAD(2) <TOKEN_STRING>)*
+        }
+
+        void prefix_op(): {} {
+            <TOKEN_PLUS> | <TOKEN_MINUS> | <TOKEN_BNOT> | <TOKEN_NOT>
+        }
+        void mult_op(): {} {
+            <TOKEN_DIV> | <TOKEN_MULT> | <TOKEN_DIVINT> | <TOKEN_REM>
+        | <TOKEN_BAND> | <TOKEN_AND>
+        }
+        void add_op(): {} {
+            <TOKEN_PLUS> | <TOKEN_MINUS> | <TOKEN_BOR> | <TOKEN_BXOR>
+        | <TOKEN_BSL> | <TOKEN_BSR> | <TOKEN_ORW> | <TOKEN_XOR>
+        }
+        void list_op(): {} {
+            <TOKEN_PLUSPLUS> | <TOKEN_MINUSMINUS>
+        }
+        void comp_op(): {} {
+            <TOKEN_EQUALEQUAL>
+        | <TOKEN_NOTEQUAL>
+        | <TOKEN_EQUALORLESS>
+        | <TOKEN_LESS>
+        | <TOKEN_GREATEROREQUAL>
+        | <TOKEN_GREATER>
+        | <TOKEN_EXACTLYEQUAL>
+        | <TOKEN_EXACTLYNOTEQUAL>
+         }
+
+        void binary(): {} {
+            LOOKAHEAD(2) <TOKEN_LESSLESS> <TOKEN_GREATERGREATER>
+        | <TOKEN_LESSLESS> bin_elements() <TOKEN_GREATERGREATER>
+        }
+        void bin_elements(): {} {
+        bin_element() (LOOKAHEAD(2) <TOKEN_COMMA> bin_element())*
+        }
+        void bin_element(): {} {
+            bit_expr() (opt_bit_size_expr())? (opt_bit_type_list())?
+        }
+        void bit_expr(): {} {
+            prefix_op() expr_max()
+        | expr_max()
+        }
+
+        void opt_bit_size_expr(): {} {
+            <TOKEN_COLON> bit_size_expr()
+        }
+        void bit_size_expr(): {} {
+            expr_max()
+                }
+        void opt_bit_type_list(): {} {
+            <TOKEN_DIV> bit_type_list()
+        }
+        void bit_type_list(): {} {
+            bit_type() (LOOKAHEAD(2)<TOKEN_MINUS> bit_type())*
+        }
+        void bit_type(): {} {
+        LOOKAHEAD(2) <TOKEN_ATOM> <TOKEN_COLON> <TOKEN_INTEGER>
+      | LOOKAHEAD(2) <TOKEN_ATOM>
+        }
+
+        void top_type(): {} {
+           LOOKAHEAD(2) <TOKEN_VAR> <TOKEN_COLONCOLON> top_type_100()
+        | LOOKAHEAD(2) top_type_100()
+        }
+        void top_type_100(): {} {
+        type_200() (LOOKAHEAD(2) <TOKEN_OR> top_type_100())?
+        }
+        void top_types(): {} {
+        top_type() (LOOKAHEAD(2) <TOKEN_COMMA> top_type())*
+        }
+        void type(): {} {
+            <TOKEN_LPAREN> top_type() <TOKEN_RPAREN>
+        | <TOKEN_VAR>
+        | LOOKAHEAD(2) <TOKEN_ATOM>
+        | LOOKAHEAD(3) <TOKEN_ATOM> <TOKEN_LPAREN> <TOKEN_RPAREN>
+        | LOOKAHEAD(1000) <TOKEN_ATOM> <TOKEN_LPAREN> top_types() <TOKEN_RPAREN>
+        | LOOKAHEAD(5) <TOKEN_ATOM> <TOKEN_COLON> <TOKEN_ATOM> <TOKEN_LPAREN> <TOKEN_RPAREN>
+
+        | LOOKAHEAD(1000) <TOKEN_ATOM> <TOKEN_COLON> <TOKEN_ATOM> <TOKEN_LPAREN> top_types() <TOKEN_RPAREN>
+
+        | LOOKAHEAD(2) <TOKEN_LSQUAREPAREN> <TOKEN_RSQUAREPAREN>
+        | LOOKAHEAD(1000)<TOKEN_LSQUAREPAREN> top_type() <TOKEN_RSQUAREPAREN>
+        | LOOKAHEAD(1000)<TOKEN_LSQUAREPAREN> top_type() <TOKEN_COMMA> <TOKEN_DOTDOTDOT> <TOKEN_RSQUAREPAREN>
+
+        | LOOKAHEAD(3) <TOKEN_HASH> <TOKEN_LCURLYBRACE> <TOKEN_RCURLYBRACE>
+        | LOOKAHEAD(1000)<TOKEN_HASH> <TOKEN_LCURLYBRACE> map_pair_types() <TOKEN_RCURLYBRACE>
+        | LOOKAHEAD(2) <TOKEN_LCURLYBRACE> <TOKEN_RCURLYBRACE>
+        | LOOKAHEAD(1000) <TOKEN_LCURLYBRACE> top_types() <TOKEN_RCURLYBRACE>
+        | LOOKAHEAD(4)<TOKEN_HASH> <TOKEN_ATOM> <TOKEN_LCURLYBRACE> <TOKEN_RCURLYBRACE>
+        | LOOKAHEAD(1000)<TOKEN_HASH> <TOKEN_ATOM> <TOKEN_LCURLYBRACE> field_types() <TOKEN_RCURLYBRACE>
+
+        | binary_type()
+        | <TOKEN_INTEGER>
+        | <TOKEN_CHAR>
+        | LOOKAHEAD(3) <TOKEN_FUN> <TOKEN_LPAREN> <TOKEN_RPAREN>
+        | LOOKAHEAD(1000) <TOKEN_FUN> <TOKEN_LPAREN> fun_type_100() <TOKEN_RPAREN>
+        }
+        void typed_expr(): {} {
+            expr() <TOKEN_COLONCOLON> top_type()
+                }
+        void typed_attr_val(): {} {
+         LOOKAHEAD(1000)   expr() <TOKEN_COMMA> typed_record_fields()
+        |LOOKAHEAD(1000) expr() <TOKEN_COLONCOLON> top_type()
+                }
+
+        void type_sig(): {} {
+        fun_type() (LOOKAHEAD(2) <TOKEN_WHEN> type_guards())?
+        }
+        void type_sigs(): {} {
+        type_sig() (LOOKAHEAD(2) <TOKEN_SEMICOLON> type_sig())*
+        }
+        void type_guard(): {} {
+            <TOKEN_ATOM> <TOKEN_LPAREN> top_types() <TOKEN_RPAREN>
+        | <TOKEN_VAR> <TOKEN_COLONCOLON> top_type()
+        }
+        void type_guards(): {} {
+        type_guard() (LOOKAHEAD(2) <TOKEN_COMMA> type_guard())*
+        }
+        void fun_type(): {} {
+          LOOKAHEAD(1000)  <TOKEN_LPAREN> <TOKEN_RPAREN> <TOKEN_MINUSGREATER> top_type()
+        | LOOKAHEAD(1000) <TOKEN_LPAREN> top_types() <TOKEN_RPAREN> <TOKEN_MINUSGREATER> top_type()
+        }
+        void fun_type_100(): {} {
+         LOOKAHEAD(1000)   <TOKEN_LPAREN> <TOKEN_DOTDOTDOT> <TOKEN_RPAREN> <TOKEN_MINUSGREATER> top_type()
+        |LOOKAHEAD(1000) fun_type()
+        }
+        void binary_type(): {} {
+         LOOKAHEAD(2)   <TOKEN_LESSLESS> <TOKEN_GREATERGREATER>
+        |LOOKAHEAD(1000) <TOKEN_LESSLESS> bin_base_type() <TOKEN_GREATERGREATER>
+        |LOOKAHEAD(1000) <TOKEN_LESSLESS> bin_unit_type() <TOKEN_GREATERGREATER>
+        |LOOKAHEAD(1000) <TOKEN_LESSLESS> bin_base_type() <TOKEN_COMMA> bin_unit_type() <TOKEN_GREATERGREATER>
+        }
+
+        void type_spec(): {} {
+            spec_fun() type_sigs()
+        | <TOKEN_LPAREN> spec_fun() type_sigs() <TOKEN_RPAREN>
+        }
+        void spec_fun(): {} {
+        <TOKEN_ATOM> (LOOKAHEAD(2) <TOKEN_COLON> <TOKEN_ATOM>)?
+        }
+        void typed_exprs(): {} {
+         LOOKAHEAD(1000) typed_expr() (LOOKAHEAD(2) <TOKEN_COMMA> typed_exprs())?
+        |LOOKAHEAD(1000) expr() <TOKEN_COMMA> typed_exprs()
+        | LOOKAHEAD(1000) typed_expr() <TOKEN_COMMA> exprs()
+        }
+        void typed_record_fields(): {} {
+            <TOKEN_LCURLYBRACE> typed_exprs() <TOKEN_RCURLYBRACE>
+                        }
+        void field_types(): {} {
+            field_type() (LOOKAHEAD(2) <TOKEN_COMMA> field_type())*
+        }
+        void field_type(): {} {
+            <TOKEN_ATOM> <TOKEN_COLONCOLON> top_type()
+                                }
+
+        void map_pair_types(): {} {
+            map_pair_type() (LOOKAHEAD(2) <TOKEN_COMMA> map_pair_type())*
+        }
+        void map_pair_type(): {} {
+         LOOKAHEAD(1000)   top_type() <TOKEN_EQUALGREATER> top_type()
+        |LOOKAHEAD(1000) top_type() <TOKEN_COLONEQUAL> top_type()
+        }
+
+        void bin_base_type(): {} {
+            <TOKEN_VAR> <TOKEN_COLON> type()
+        }
+        void bin_unit_type(): {} {
+            <TOKEN_VAR> <TOKEN_COLON> <TOKEN_VAR> <TOKEN_MULT> type()
+        }
+        void type_200(): {} {
+            type_300() (LOOKAHEAD(2) <TOKEN_DOTDOT> type_300())?
+                                }
+        void type_300(): {} {
+            type_400() (LOOKAHEAD(2) add_op() type_400())*
+        }
+        void type_400(): {} {
+            type_500() (LOOKAHEAD(2) mult_op() type_500())*
+        }
+        void type_500(): {} {
+            prefix_op() type()
+        | type()
+        }

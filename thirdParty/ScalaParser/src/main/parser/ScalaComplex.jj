@@ -1,0 +1,901 @@
+options
+{
+     LOOKAHEAD=50;
+     STATIC=false;
+}
+
+PARSER_BEGIN(Parser)
+
+package main.parser;
+
+public class Parser {
+
+    static int valDeclCount;
+    static int varDeclCount;
+    static int funcDeclCount;
+    static int funcDefCount;
+    static int classDefCount;
+    static int importCount;
+    static int whileCount;
+    static int ifCount;
+    static int assignCount;
+    static int throwCount;
+    static int returnCount;
+    static int tryCount;
+    static int forCount;
+    static int annotationCount;
+    static int objectDefCount;
+    static int traitDefCount;
+    static int notPublicModifier;
+    static int publicModifiers;
+
+    public static main.metrics.Metrics parse(String path) throws ParseException {
+
+        valDeclCount = 0;
+        varDeclCount = 0;
+        funcDeclCount = 0;
+        funcDefCount = 0;
+        classDefCount = 0;
+        importCount = 0;
+        whileCount = 0;
+        ifCount = 0;
+        assignCount = 0;
+        throwCount = 0;
+        returnCount = 0;
+        tryCount = 0;
+        forCount = 0;
+        annotationCount = 0;
+        objectDefCount = 0;
+        traitDefCount = 0;
+        notPublicModifier = 0;
+        publicModifiers = 0;
+
+        if (path.length() != 0){
+            System.out.println("===============================================================");
+            System.out.println("Parser: Reading from file " + path + " . . .");
+            try {
+                Parser parser = new Parser(new java.io.FileInputStream(path));
+                parser.CompilationUnit();
+            } catch (java.io.FileNotFoundException e) {
+                System.out.println("Parser: File " + path + " not found.");
+            }
+        } else {
+          System.out.println("Parser: Specify an input file . . .");
+        }
+
+        main.metrics.Metrics metrics = new main.metrics.Metrics();
+        metrics.setValDeclCount(valDeclCount);
+        metrics.setVarDeclCount(varDeclCount);
+        metrics.setFuncDeclCount(funcDeclCount);
+        metrics.setFuncDefCount(funcDefCount);
+        metrics.setClassDefCount(classDefCount);
+        metrics.setImportCount(importCount);
+        metrics.setWhileCount(whileCount);
+        metrics.setIfCount(ifCount);
+        metrics.setAssignCount(assignCount);
+        metrics.setThrowCount(throwCount);
+        metrics.setReturnCount(returnCount);
+        metrics.setTryCount(tryCount);
+        metrics.setForCount(forCount);
+        metrics.setAnnotationCount(annotationCount);
+        metrics.setObjectDefCount(objectDefCount);
+        metrics.setTraitDefCount(traitDefCount);
+
+        System.out.println("Val declarations: " + valDeclCount);
+        System.out.println("Var declarations: " + varDeclCount);
+        System.out.println("Total variables: " + (valDeclCount + varDeclCount));
+        System.out.println("Function declarations only: " + funcDeclCount);
+        System.out.println("Function declarations with definitions: " + funcDefCount);
+        System.out.println("Total functions: " + (funcDeclCount + funcDefCount));
+        System.out.println("Class definitions: " + classDefCount);
+        System.out.println("Imports: " + importCount);
+        System.out.println("While blocks: " + whileCount);
+        System.out.println("If blocks: " + ifCount);
+        System.out.println("Assignment blocks: " + assignCount);
+        System.out.println("Throws blocks: " + throwCount);
+        System.out.println("Return statements: " + returnCount);
+        System.out.println("Try blocks: " + tryCount);
+        System.out.println("For blocks: " + forCount);
+        System.out.println("Annotations: " + annotationCount);
+        System.out.println("Object definitions: " + objectDefCount);
+        System.out.println("Trait definitions: " + traitDefCount);
+
+        return metrics;
+    }
+
+    public static main.metrics.ComplexMetrics parseComplex(String path) throws ParseException {
+
+        valDeclCount = 0;
+        varDeclCount = 0;
+        funcDeclCount = 0;
+        funcDefCount = 0;
+        classDefCount = 0;
+        importCount = 0;
+        whileCount = 0;
+        ifCount = 0;
+        assignCount = 0;
+        throwCount = 0;
+        returnCount = 0;
+        tryCount = 0;
+        forCount = 0;
+        annotationCount = 0;
+        objectDefCount = 0;
+        traitDefCount = 0;
+        notPublicModifier = 0;
+        publicModifiers = 0;
+
+
+        if (path.length() != 0){
+            System.out.println("===============================================================");
+            System.out.println("Complex parser: Reading from file " + path + " . . .");
+            try {
+                Parser parser = new Parser(new java.io.FileInputStream(path));
+                parser.CompilationUnit();
+            } catch (java.io.FileNotFoundException e) {
+                System.out.println("Parser: File " + path + " not found.");
+            }
+        } else {
+          System.out.println("Parser: Specify an input file . . .");
+        }
+
+        main.metrics.ComplexMetrics cmetrics = new main.metrics.ComplexMetrics();
+        cmetrics.setFuncDeclCount(funcDeclCount);
+        cmetrics.setFuncDefCount(funcDefCount);
+
+        publicModifiers = funcDeclCount + funcDefCount + valDeclCount + varDeclCount - notPublicModifier;
+
+        cmetrics.setNPM(publicModifiers);
+
+        System.out.println("WMC: " + cmetrics.getWMC());
+        System.out.println("Not public modifiers: " + notPublicModifier);
+        System.out.println("Public modifiers: " + publicModifiers);
+
+        return cmetrics;
+    }
+}
+
+PARSER_END(Parser)
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+}
+
+TOKEN :
+{
+    <LCURBRACE: "{">
+    | <RCURBRACE: "}">
+    | <LBRACE: "(">
+    | <RBRACE: ")">
+
+    | <LETTER: ["a" - "z", "A" - "Z"]>
+    | <DIGIT: ["0" - "9"]>
+    | <NONZERODIGIT: ["1" - "9"]>
+}
+
+TOKEN :
+{
+  <DEF: "def">
+  | <VAL: "val">
+  | <VAR: "var">
+  | <TYPE: "type">
+  | <THIS: "this">
+  | <IMPLICIT: "implicit">
+  | <LAZY: "lazy">
+  | <IF: "if">
+  | <ELSE: "else">
+  | <WHILE: "while">
+  | <DO: "do">
+  | <TRY: "try">
+  | <CATCH: "catch">
+  | <FINALLY: "finally">
+  | <THROW: "throw">
+  | <RETURN: "return">
+  | <SUPER: "super">
+  | <IMPORT: "import">
+  | <ABSTRACT: "abstract">
+  | <FINAL: "final">
+  | <SEALED: "sealed">
+  | <PRIVATE: "private">
+  | <PROTECTED: "protected">
+  | <OVERRIDE: "override">
+  | <CASE: "case">
+  | <CLASS: "class">
+  | <OBJECT: "object">
+  | <TRAIT: "trait">
+  | <EXTENDS: "extends">
+  | <WITH: "with">
+  | <NEW: "new">
+  | <FOR: "for">
+  | <YIELD: "yield">
+  | <PACKAGE: "package">
+  | <MATCH: "match">
+  | <EQUALS_SIGN: "=">
+}
+
+/** Root production. */
+void CompilationUnit() :{}
+{
+    Start() <EOF>
+}
+
+void id() : {}
+{
+    <LETTER> (<LETTER> | <DIGIT>)*
+}
+
+void QualId() : {}
+{
+    id() ("." id())*
+}
+
+void ids() : {}
+{
+    id() ("," id())*
+}
+
+void Type() : {}
+{
+    id() //hardcode
+    | FunctionArgTypes() "=>" Type()
+    | InfixType() [ExistentialClause()]
+}
+
+void FunctionArgTypes() : {}
+{
+    InfixType()
+    | <LBRACE> [ParamType() ("," ParamType())*] <RBRACE>
+}
+
+void ExistentialClause() : {}
+{
+    id()
+    //'forSome' '{' existentialDcl (Semi existentialDcl)* '}'
+}
+
+void InfixType() : {}
+{
+    CompoundType() (id() CompoundType())*
+}
+
+void CompoundType() : {}
+{
+    (AnnotType() (<WITH> AnnotType())* [Refinement()])
+    | Refinement()
+}
+
+void Refinement() : {}
+{
+    <LCURBRACE> RefineStat() ([";"] RefineStat())* <RCURBRACE>
+}
+
+void RefineStat() : {}
+{
+    Dcl()
+    | (<TYPE> TypeDef())
+
+}
+
+void AnnotType() : {}
+{
+    SimpleType() (Annotation())*
+}
+
+void Types() : {}
+{
+    Type() ("," Type())*
+}
+
+void TypeArgs() : {}
+{
+    "[" Types() "]"
+}
+
+void SimpleType() : {}
+{
+    //(SimpleType() (TypeArgs()) | ("#" id())) left recursion
+    //| StableId()
+    StableId()
+    | ((StableId() | [id() "."] <THIS>) "." <TYPE>)
+    | (<LBRACE> Types() <RBRACE>)
+}
+
+void Annotation() : {}
+{
+    "@" SimpleType() (ArgumentExprs())*
+    {annotationCount++;}
+}
+
+void Varid() : {}
+{
+    id() //hardcode
+}
+
+void Expr() : {}
+{
+    ((Bindings() | [<IMPLICIT>] id() | "_") "=>" Expr())
+     | Expr1()
+     //| id() //hardcode
+}
+
+void Bindings() : {}
+{
+    <LBRACE> Binding() ("," Binding() )* <RBRACE>
+}
+
+void Binding() : {}
+{
+    (id() | "_") [":" Type()]
+}
+
+void Expr1() : {}
+{
+    IfBlock()
+    | WhileBlock()
+    //| (<DO> Expr() [";"] <WHILE> <LBRACE> Expr() <RBRACE>)
+    | TryBlock()
+    | ForBlock()
+    | ThrowBlock()
+    | ReturnBlock()
+    | AssignBlock()
+    | (SimpleExpr1() ArgumentExprs() <EQUALS_SIGN> Expr())
+    | PostfixExpr()
+    | PostfixExpr() Ascription()
+    | PostfixExpr() <MATCH> <LCURBRACE> CaseClauses() <RCURBRACE>
+    | MyExpr()
+}
+
+void MyExpr() : {}
+{
+    id() ("." id())* [<LBRACE> ["\""] [id()] ["\""] <RBRACE>]
+}
+
+void IfBlock() : {}
+{
+    <IF> <LBRACE> Expr() <RBRACE> [<LCURBRACE>] Expr() [<RCURBRACE>]
+        [[";"] <ELSE> [<LCURBRACE>] Expr() [<RCURBRACE>]]
+    {ifCount++;}
+}
+
+void WhileBlock() : {}
+{
+    (<WHILE> <LBRACE> Expr() <RBRACE> [<LCURBRACE>] Expr() [<RCURBRACE>])
+    {whileCount++;}
+}
+
+void ForBlock() : {}
+{
+    <FOR> ((<LBRACE> Enumerators() <RBRACE>) | (<LCURBRACE> Enumerators() <RCURBRACE>)) [<YIELD>] Expr()
+    {forCount++;}
+}
+
+void Enumerators() : {}
+{
+    Generator() ([";"] Generator())*
+}
+
+void Ascription() : {}
+{
+    (":" InfixType())
+    | (":" (Annotation()) (Annotation())*)
+    | (":" "_" "*")
+}
+
+void Generator() : {}
+{
+    Pattern1() "<-" Expr() ([";"] Guard() | ";" Pattern1() <EQUALS_SIGN> Expr())*
+}
+
+void TryBlock() : {}
+{
+    <TRY> (<LCURBRACE> Block() <RCURBRACE> | Expr())
+    [<CATCH> <LCURBRACE> CaseClauses() <RCURBRACE>]
+    [<FINALLY> <LCURBRACE> Expr() <RCURBRACE>]
+
+    {tryCount++;}
+}
+
+void ThrowBlock() : {}
+{
+    <THROW> <NEW> id() <LBRACE> ("\"" id() "\"")? <RBRACE> [";"]
+    {throwCount++;}
+}
+
+void ReturnBlock() : {}
+{
+    <RETURN> [Expr()]
+    {returnCount++;}
+}
+
+void AssignBlock() : {}
+{
+    [SimpleExpr() "."] id() <EQUALS_SIGN> Expr()
+    {assignCount++;}
+}
+
+void CaseClauses() : {}
+{
+    CaseClause() (CaseClause())*
+}
+
+void CaseClause() : {}
+{
+    <CASE> Pattern() [Guard()] "=>" Block() [";"]
+}
+
+void Guard() : {}
+{
+    <IF> PostfixExpr()
+}
+
+void PostfixExpr() : {}
+{
+    InfixExpr() [id()]
+}
+
+void InfixExpr() : {}
+{
+    PrefixExpr() (id() PrefixExpr())*
+}
+
+void PrefixExpr() : {}
+{
+    ["-" | "+" | "~" | "!"]
+    (<NEW> (ClassTemplate() | TemplateBody())| BlockExpr() | SimpleExpr1() ["_"])
+}
+
+void SimpleExpr() : {}
+{
+    <NEW> (ClassTemplate() | TemplateBody())
+    | BlockExpr()
+    | SimpleExpr1() ["_"]
+}
+
+void SimpleExpr1() : {}
+{
+    //literal
+    //| StableId()
+    StableId() [ArgumentExprs()]
+    | ([id() "."] <THIS>) [ArgumentExprs()]
+    | "_" [ArgumentExprs()]
+    | <LBRACE> [Exprs()] <RBRACE> [ArgumentExprs()]
+    | (<NEW> (ClassTemplate() | TemplateBody()) | BlockExpr() ) "." id() [ArgumentExprs()]
+    | (<NEW> (ClassTemplate() | TemplateBody()) | BlockExpr() ) TypeArgs() [ArgumentExprs()]
+}
+
+void Block() : {}
+{
+    BlockStat() ([";"] BlockStat())* [ResultExpr()]
+}
+
+void ResultExpr() : {}
+{
+    Expr1()
+//    |  ((Bindings() | ([<IMPLICIT>] id() | "_") ":" CompoundType) "=>" Block)
+}
+
+void BlockStat() : {}
+{
+    Import()
+    | (Annotation())* [<IMPLICIT> | <LAZY>] Def()
+    | (Annotation())* (LocalModifier())* TmplDef()
+    | Expr1()
+
+}
+
+void LocalModifier() : {}
+{
+    <ABSTRACT>
+    | <FINAL>
+    | <SEALED>
+    | <IMPLICIT>
+    | <LAZY>
+}
+
+void Modifier() : {}
+{
+    LocalModifier()
+    | AccessModifier()
+    | <OVERRIDE>
+}
+
+void TmplDef() : {}
+{
+    [<CASE>] <CLASS> ClassDef()
+    | [<CASE>] <OBJECT> ObjectDef()
+    | <TRAIT> TraitDef()
+}
+
+void ClassDef() : {}
+{
+    id() [TypeParamClause()] (ConstrAnnotation())* [AccessModifier()] ClassParamClauses() ClassTemplateOpt()
+    {classDefCount++;}
+}
+
+void ObjectDef() : {}
+{
+    id() ClassTemplateOpt()
+    {objectDefCount++;}
+}
+
+void TraitDef() : {}{
+    id() [TypeParamClause()] TraitTemplateOpt()
+    {traitDefCount++;}
+}
+
+void TraitTemplateOpt() : {}
+{
+    <EXTENDS> TraitTemplate() | [[<EXTENDS>] TemplateBody()]
+}
+
+void TraitTemplate() : {}
+{
+    [EarlyDefs()] TraitParents() [TemplateBody()]
+}
+
+void TraitParents() : {}
+{
+    AnnotType() (<WITH> AnnotType())*
+}
+
+void ConstrAnnotation() : {}
+{
+    "@" SimpleType() ArgumentExprs()
+    //id() //hardcode
+    {annotationCount++;}
+}
+
+void ClassParamClauses() : {}
+{
+    (ClassParamClause())* [<LBRACE> <IMPLICIT> ClassParams() <RBRACE>]
+}
+
+void ClassParamClause() : {}
+{
+    <LBRACE> [ClassParams()] <RBRACE>
+}
+
+void ClassParams() : {}
+{
+    ClassParam() ("," ClassParam())*
+}
+
+void ClassParam() : {}
+{
+    (Annotation())* (Modifier())* [(<VAL> | <VAR>)]
+    id() ":" ParamType() [<EQUALS_SIGN> Expr()]
+}
+
+void AccessModifier() : {}
+{
+    (<PRIVATE> | <PROTECTED>) [AccessQualifier()]
+    {notPublicModifier++;}
+}
+
+void AccessQualifier() : {}
+{
+    "[" (id() | <THIS>) "]"
+}
+
+void ClassTemplateOpt() : {}
+{
+    <EXTENDS> ClassTemplate() | [[<EXTENDS>] TemplateBody()]
+}
+
+void TemplateBody() : {}
+{
+    <LCURBRACE> [SelfType()] [TemplateStat()] ([";"] TemplateStat())* <RCURBRACE>
+}
+
+void SelfType() : {}
+{
+    (id() [":" Type()] "=>")
+    | (<THIS> ":" Type() "=>")
+}
+
+void TemplateStat() : {}
+{
+    Import()
+    | ((Annotation())* (Modifier())* (Def() | Dcl()))
+    | Expr()
+    //|
+}
+
+//CLASS TEMPLATE
+
+void ClassTemplate() : {}
+{
+    [EarlyDefs()] ClassParents() [TemplateBody()]
+}
+
+void EarlyDefs() : {}
+{
+    <LCURBRACE> [EarlyDef() (";" EarlyDef())*] <RCURBRACE> <WITH>
+}
+
+void EarlyDef() : {}
+{
+    (Annotation())* (Modifier())* PatVarDef()
+}
+
+void ClassParents() : {}
+{
+    Constr() (<WITH> AnnotType())*
+}
+
+void Constr() : {}
+{
+    AnnotType() (ArgumentExprs())*
+}
+
+void ArgumentExprs() : {}
+{
+    id() //hardcode
+    | <LBRACE> [Exprs()] <RBRACE>
+    //| '(' (exprs ',')? postfixExpr ':' '_' '*' ')'
+    | BlockExpr()
+}
+
+void BlockExpr() : {}
+{
+    <LCURBRACE> CaseClauses() <RCURBRACE>
+    | <LCURBRACE> Block() <RCURBRACE>
+}
+
+void Exprs() : {}
+{
+    Expr() ("," Expr())*
+}
+
+void Import() : {}
+{
+    <IMPORT> ImportExpr() ("," ImportExpr())*
+    {importCount++;}
+}
+
+void ImportExpr() : {}
+{
+    StableId() "." (id() | "_" | ImportSelectors())
+}
+
+void ImportSelectors() : {}
+{
+    <LCURBRACE> (ImportSelector() ",")* (ImportSelector() | "_") <RCURBRACE>
+}
+
+void ImportSelector() : {}
+{
+    id() ["=>" id() | "=>" "_"]
+}
+
+
+void Start() : {}
+{
+    //(Def() | Dcl() | Import())*
+    ((<PACKAGE> QualId() [";"])* TopStatSeq())
+    // (<DEF> FunDef() | Dcl() | TmplDef() | Import())*
+}
+
+void TopStatSeq() : {}
+{
+    TopStat() ([";"] TopStat())*
+}
+
+void TopStat() : {}
+{
+    ((Annotation())* (Modifier())* TmplDef())
+    | Import()
+    | Packaging()
+    | PackageObject()
+}
+
+void Packaging() : {}
+{
+    <PACKAGE> QualId() <LCURBRACE> TopStatSeq() <RCURBRACE>
+}
+
+void PackageObject() : {}
+{
+    <PACKAGE> <OBJECT> ObjectDef()
+}
+
+void Def() : {}
+{
+    (PatVarDef()
+    | <DEF> FunDef()
+    | <TYPE> TypeDef()
+    | TmplDef())
+}
+
+void PatVarDef() : {}
+{
+    (<VAL> PatDef())
+    | (<VAR> VarDef())
+}
+
+void PatDef() : {}
+{
+    Pattern2() ("," Pattern2())* (":" Type())* <EQUALS_SIGN> Expr()
+}
+
+void VarDef() : {}
+{
+    PatDef()
+    | (ids() ":" Type() <EQUALS_SIGN> "_")
+}
+
+
+
+void Patterns() : {}
+{
+    (Pattern() ["," Patterns()])
+    | ("_" "*")
+}
+
+void Pattern() : {}
+{
+    Pattern1() ( "|" Pattern1() )*
+}
+
+void Pattern1() : {}
+{
+    Varid() ":" TypePat()
+    | "_" ":" TypePat()
+    | Pattern2()
+}
+
+void TypePat() : {}
+{
+    Type()
+}
+
+void Pattern2() : {}
+{
+    (Varid() ["@" Pattern3()])
+    | Pattern3()
+}
+
+void Pattern3() : {}
+{
+    SimplePattern()
+    | SimplePattern() ( id() SimplePattern() )*
+}
+
+void SimplePattern() : {}
+{
+    "_"
+    | Varid()
+    //| Literal
+    | StableId()
+    | StableId() <LBRACE> [Patterns()] <RBRACE>
+    | StableId() <LBRACE> [Patterns() ","] [Varid() "@"] "_" "*" <RBRACE>
+    | <LBRACE> [Patterns()] <RBRACE>
+}
+
+void StableId() : {}
+{
+    ((id() | ([id() "."] <THIS>)) "." id())
+    | ([id() "."] <SUPER> [ClassQualifier()] "." id())
+    | id()//hardcode
+}
+
+void ClassQualifier() : {}
+{
+    "[" id() "]"
+}
+
+//DECLARATION
+
+void Dcl() : {}
+{
+    (<VAL> ValDcl()
+    | <VAR> VarDcl()
+    | <DEF> FunDcl()
+    | <TYPE> TypeDcl())
+}
+
+
+void ValDcl() : {}
+{
+    (ValId() ("," ValId())*) ":" Type()
+
+}
+
+void VarDcl() : {}
+{
+    (VarId() ("," VarId())*) ":" Type()
+}
+
+void ValId() : {}
+{
+    id()
+    {valDeclCount++;}
+}
+
+void VarId() : {}
+{
+    id()
+    {varDeclCount++;}
+}
+
+void TypeDcl() : {}
+{
+    id() [TypeParamClause()] [">:" Type()] ["<:" Type()]
+}
+
+void TypeDef() : {}
+{
+    id() [TypeParamClause()] <EQUALS_SIGN> Type()
+}
+
+void FunDcl() : {}
+{
+    FunSig() [":" Type()]
+    {funcDeclCount++;}
+}
+
+void FunSig() : {}
+{
+    id() [FunTypeParamClause()] ParamClauses()
+}
+
+void FunTypeParamClause() : {}
+{
+    "[" TypeParam() ("," TypeParam())* "]"
+}
+
+void TypeParam() : {}
+{
+    (id() | "_") [TypeParamClause()] [">:" Type()] ["<:" Type()]
+    ("<%" Type())* (":" Type())*
+}
+
+void TypeParamClause() : {}
+{
+    "[" VariantTypeParam() ("," VariantTypeParam())* "]"
+}
+
+void VariantTypeParam() : {}
+{
+    (Annotation())* ["+" | "-"] TypeParam()
+}
+
+void ParamClauses() : {}
+{
+    (ParamClause())* ["(" "implicit" Params() ")"]
+}
+
+void ParamClause() : {}
+{
+    "(" [Params()] ")"
+}
+
+void Params() : {}
+{
+    Param() ("," Param())*
+}
+
+void Param() : {}
+{
+    (Annotation())* id() [":" ParamType()] [<EQUALS_SIGN> Expr()]
+}
+
+void ParamType() : {}
+{
+    Type()
+    | "=>" Type()
+    | Type() "*"
+}
+
+void FunDef() : {}
+{
+    (FunSig() ( ([":" Type()] <EQUALS_SIGN> Expr()) | (<LCURBRACE> [Block()] <RCURBRACE>) ))
+    //| (<THIS> ParamClause() ParamClauses() (<EQUALS_SIGN> constrExpr | constrBlock))
+
+    {funcDefCount++;}
+}
+
+

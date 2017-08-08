@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8" inherit-compiler-output="false">
+    <output url="file://$MODULE_DIR$/target/classes" />
+    <output-test url="file://$MODULE_DIR$/target/test-classes" />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/target/generated-sources/org/apache/activemq/selector" isTestSource="false" generated="true" />
+      <sourceFolder url="file://$MODULE_DIR$/target/generated-sources/javacc" isTestSource="false" generated="true" />
+      <sourceFolder url="file://$MODULE_DIR$/target/generated-sources/jjtree-timestamp" isTestSource="false" generated="true" />
+      <sourceFolder url="file://$MODULE_DIR$/target/generated-sources/jjtree" isTestSource="false" generated="true" />
+      <sourceFolder url="file://$MODULE_DIR$/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/main/grammar" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/test/resources" type="java-test-resource" />
+      <excludeFolder url="file://$MODULE_DIR$/target/classes" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1486882861768" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1486898441298" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1486900795265" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1486900816986" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1486900890418" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1486900937256" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1486900951022" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1486902731241" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1486903356397" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1486905452886" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1486905477583" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1486905558173" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1486911288124" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1486911319446" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1486924246922" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1486976646202" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1486977893456" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1486986215235" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1486987236767" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1487067957372" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1487095899878" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1487097101465" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1487097460750" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1487097649313" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1487097670927" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1487097678828" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1487100872013" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1487148159851" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1487158677619" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1487181505036" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1487181640308" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1488111554584" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1488113845241" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1488114023912" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1488742485005" />
+      <excludeFolder url="file://$MODULE_DIR$/target/javacc-1488742730544" />
+      <excludeFolder url="file://$MODULE_DIR$/target/test-classes" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.12" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-core:1.3" level="project" />
+  </component>
+</module>

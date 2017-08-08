@@ -1,0 +1,864 @@
+/**
+ * @author Alexey Chernyshov
+ */
+
+options
+{
+  STATIC = false;
+  IGNORE_CASE = false;
+  MULTI = true;        // in multi mode the type of the node is derived from the name of the node
+  VISITOR = true;
+}
+
+PARSER_BEGIN(GoParser)
+
+package com.github.alexey_n_chernyshov;
+
+import java.io.InputStream;
+
+/**
+ * Parses go lang source and produces AST.
+ * Go lang source should be preprocessed before parsing to be ensure that
+ * all necessary semicolons (;) are inserted.
+ */
+public class GoParser
+{
+    /**
+      * Parses input stream and returns root node.
+      */
+    public SimpleNode getRoot() throws ParseException {
+        return SourceFile();
+    }
+}
+
+PARSER_END(GoParser)
+
+SKIP:
+{
+/* Whitespace */
+  "\t"
+| "\n"
+| "\r"
+| " "
+/* comments */
+| < "//" (~["\r", "\n"])* >
+| < "/*" > : ML_COMMENT_STATE
+}
+
+<ML_COMMENT_STATE> SKIP :
+{
+  < "*/" > : DEFAULT
+| < ~[] >
+}
+
+/* tokens are */
+TOKEN:
+{
+/* keywords */
+  <TOKEN_BREAK: "break">
+| <TOKEN_DEFAULT: "default">
+| <TOKEN_FUNC: "func">
+| <TOKEN_INTERFACE: "interface">
+| <TOKEN_SELECT: "select">
+| <TOKEN_CASE: "case">
+| <TOKEN_DEFER: "defer">
+| <TOKEN_GO: "go">
+| <TOKEN_MAP: "map">
+| <TOKEN_STRUCT: "struct">
+| <TOKEN_CHAN: "chan">
+| <TOKEN_ELSE: "else">
+| <TOKEN_GOTO: "goto">
+| <TOKEN_PACKAGE: "package">
+| <TOKEN_SWITCH: "switch">
+| <TOKEN_CONST: "const">
+| <TOKEN_FALLTROUGH: "fallthrough">
+| <TOKEN_IF: "if">
+| <TOKEN_RANGE: "range">
+| <TOKEN_TYPE: "type">
+| <TOKEN_CONTINUE: "continue">
+| <TOKEN_FOR: "for">
+| <TOKEN_IMPORT: "import">
+| <TOKEN_RETURN: "return">
+| <TOKEN_VAR: "var">
+
+/* operators and delimiters */
+| <TOKEN_PLUS: "+">
+| <TOKEN_AND: "&">
+| <TOKEN_PLUSEQUAL: "+=">
+| <TOKEN_ANDEQUAL: "&=">
+| <TOKEN_ANDAND: "&&">
+| <TOKEN_EQUALEQUAL: "==">
+| <TOKEN_NOTEQUAL: "!=">
+| <TOKEN_LPAREN: "(">
+| <TOKEN_RPAREN: ")">
+| <TOKEN_MINUS: "-">
+| <TOKEN_OR: "|">
+| <TOKEN_MINUSEQUAL: "-=">
+| <TOKEN_OREQUAL: "|=">
+| <TOKEN_OROR: "||">
+| <TOKEN_LESS: "<">
+| <TOKEN_LESSOREQUAL: "<=">
+| <TOKEN_LSQUAREPAREN: "[">
+| <TOKEN_RSQUAREPAREN: "]">
+| <TOKEN_MULT: "*">
+| <TOKEN_XOR: "^">
+| <TOKEN_MULEQUAL: "*=">
+| <TOKEN_XOREQUAL: "^=">
+| <TOKEN_LESSMINUS: "<-">
+| <TOKEN_GREATER: ">">
+| <TOKEN_GREATEREQUAL: ">=">
+| <TOKEN_LCURLYBRACE: "{">
+| <TOKEN_RCURLYBRACE: "}">
+| <TOKEN_DIV: "/">
+| <TOKEN_LESSLESS: "<<">
+| <TOKEN_DIVEQUAL: "/=">
+| <TOKEN_LESSLESSEQUAL: "<<=">
+| <TOKEN_PLUSPLUS: "++">
+| <TOKEN_EQUAL: "=">
+| <TOKEN_COLONEQUAL: ":=">
+| <TOKEN_COMMA: ",">
+| <TOKEN_SEMICOLON: ";">
+| <TOKEN_PERCENT: "%">
+| <TOKEN_GREATERGREATER: ">>">
+| <TOKEN_PERCENTEQUAL: "%=">
+| <TOKEN_GREATERGREATEREQUAL: ">>=">
+| <TOKEN_MINNUSMINUS: "--">
+| <TOKEN_EXCLAMATION: "!">
+| <TOKEN_ELLIPSIS: "...">
+| <TOKEN_DOT: ".">
+| <TOKEN_COLON: ":">
+| <TOKEN_ANDXOR: "&^">
+| <TOKEN_ANDXOREQUAL: "&^=">
+
+/* Literals */
+| <TOKEN_DECIMAL_INTEGER_LITERAL: ("0")|(["1"-"9"](["0"-"9"])*)>
+
+| <TOKEN_OCTAL_INTEGER_LITERAL: "0"(["0"-"7"])+>
+
+| <TOKEN_HEX_INTEGER_LITERAL: ("0x"|"0X")(["0"-"9", "a"-"f", "A"-"F"])+>
+
+| <TOKEN_FLOATING_POINT_LITERAL: (["0"-"9"])+ "." (["0"-"9"])* (<DECIMAL_EXPONENT>)?
+                                  | (["0"-"9"])+ <DECIMAL_EXPONENT>
+                                  | "." (["0"-"9"])+ (<DECIMAL_EXPONENT>)? >
+    | <#DECIMAL_EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+>
+
+| <TOKEN_IMAGINARY_LITERAL: ((<TOKEN_FLOATING_POINT_LITERAL>)|(["0"-"9"])+)"i">
+
+| <TOKEN_RUNE_LITERAL: "'" ( (<UNICODE_VALUE>) | (<BYTE_VALUE>) ) "'">
+    | <#UNICODE_VALUE: ( ~["\n"]) | (<LITTLE_U_VALUE>) | (<BIG_U_VALUE>) | (<ESCAPED_CHAR>)>
+    | <#BYTE_VALUE: (<OCTAL_BYTE_VALUE>) | (<HEX_BYTE_VALUE>)>
+    | <#OCTAL_BYTE_VALUE: "\\" (["0"-"7"]) (["0"-"7"]) (["0"-"7"])>
+    | <#HEX_BYTE_VALUE: "\\x" (["0"-"9", "a"-"f", "A"-"F"]) (["0"-"9", "a"-"f", "A"-"F"])>
+    | <#LITTLE_U_VALUE: "\\u" (["0"-"9", "a"-"f", "A"-"F"]) (["0"-"9", "a"-"f", "A"-"F"])
+                              (["0"-"9", "a"-"f", "A"-"F"]) (["0"-"9", "a"-"f", "A"-"F"])>
+    | <#BIG_U_VALUE:  "\\U" (["0"-"9", "a"-"f", "A"-"F"]) (["0"-"9", "a"-"f", "A"-"F"])
+                            (["0"-"9", "a"-"f", "A"-"F"]) (["0"-"9", "a"-"f", "A"-"F"])
+                            (["0"-"9", "a"-"f", "A"-"F"]) (["0"-"9", "a"-"f", "A"-"F"])
+                            (["0"-"9", "a"-"f", "A"-"F"]) (["0"-"9", "a"-"f", "A"-"F"])>
+    | <#ESCAPED_CHAR: "\\" ( "a" | "b" | "f" | "n" | "r" | "t" | "v" | "\\" | "'" | "\"" )>
+
+| <TOKEN_STRING_LITERAL: (<RAW_STRING_LITERAL>) | (<INTERPRETED_STRING_LITERAL>)>
+    | <#RAW_STRING_LITERAL: "`" (~[])* "`">
+    | <#INTERPRETED_STRING_LITERAL: "\"" ((<UNICODE_VALUE>) | (<BYTE_VALUE>))* "\"">
+
+| <TOKEN_IDENTIFIER: ["a"-"z", "A"-"Z", "_"](["a"-"z", "A"-"Z", "0"-"9", "_"])*>
+}
+
+
+void IntegerLiteral() : { Token t; }
+{
+  t = <TOKEN_DECIMAL_INTEGER_LITERAL> { jjtThis.value = t.image; }
+| t = <TOKEN_OCTAL_INTEGER_LITERAL> { jjtThis.value = t.image; }
+| t = <TOKEN_HEX_INTEGER_LITERAL> { jjtThis.value = t.image; }
+}
+
+void FloatLiteral() : { Token t; }
+{
+  t = <TOKEN_FLOATING_POINT_LITERAL> { jjtThis.value = t.image; }
+}
+
+void ImaginaryLiteral() : { Token t; }
+{
+  t = <TOKEN_IMAGINARY_LITERAL> { jjtThis.value = t.image; }
+}
+
+void RuneLiteral() : { Token t; }
+{
+  t = <TOKEN_RUNE_LITERAL> { jjtThis.value = t.image; }
+}
+
+void StringLiteral() : { Token t; }
+{
+  t = <TOKEN_STRING_LITERAL> { jjtThis.value = t.image; }
+}
+
+void Literal() #void : {}
+{
+  /* Base literals */
+  (LOOKAHEAD(1000) IntegerLiteral()
+| (LOOKAHEAD(1000) FloatLiteral()
+| (LOOKAHEAD(1000) ImaginaryLiteral()
+| (LOOKAHEAD(1000) RuneLiteral()
+| (LOOKAHEAD(1000) StringLiteral()
+
+| (LOOKAHEAD(1000) FunctionLit()
+
+| CompositeLit()
+))))))
+}
+
+void CompositeLit() : {}
+{
+  LiteralType() LiteralValue()
+}
+
+void LiteralType() : {}
+{
+  (LOOKAHEAD(1000) StructType()
+| (LOOKAHEAD(1000) ArrayType()
+| (LOOKAHEAD(1000) <TOKEN_LSQUAREPAREN> <TOKEN_ELLIPSIS> <TOKEN_RSQUAREPAREN> Type()
+| (LOOKAHEAD(1000) SliceType()
+| (LOOKAHEAD(1000) MapType()
+| TypeName()
+)))))
+}
+
+void LiteralValue() : {}
+{
+  <TOKEN_LCURLYBRACE> (LOOKAHEAD(1000) ElementList() (LOOKAHEAD(1000) <TOKEN_COMMA>)? )? <TOKEN_RCURLYBRACE>
+}
+
+void ElementList() : {}
+{
+  KeyedElement() (LOOKAHEAD(1000) <TOKEN_COMMA> KeyedElement() )*
+}
+
+void KeyedElement() : {}
+{
+  (LOOKAHEAD(1000) Key() <TOKEN_COLON>)? Element()
+}
+
+void Key() : {}
+{
+  (LOOKAHEAD(1000) Identifier()
+| (LOOKAHEAD(1000) Expression()
+| LiteralValue()
+))
+}
+
+void Element() : {}
+{
+  (LOOKAHEAD(1000)
+  Expression()
+| LiteralValue()
+)
+}
+
+void FunctionLit() : {}
+{
+    <TOKEN_FUNC> Function()
+}
+
+void Function() : {}
+{
+  Signature() FunctionBody()
+}
+
+void Signature() #void : {}
+{
+  Parameters() (LOOKAHEAD(2) Result() )?
+}
+
+void Result() : {}
+{
+  LOOKAHEAD(1000)
+  Parameters()
+| Type()
+}
+
+void Parameters() : {}
+{
+  <TOKEN_LPAREN> (ParameterList() (<TOKEN_COMMA>)? )? <TOKEN_RPAREN>
+}
+
+void ParameterList() #void : {}
+{
+  ParameterDecl() (LOOKAHEAD(2) <TOKEN_COMMA> ParameterDecl() )*
+}
+
+void ParameterDecl() #void : {}
+{
+  LOOKAHEAD(1000)
+  (LOOKAHEAD(2) IdentifierList())? ( <TOKEN_ELLIPSIS> )? Type()
+| Type()
+}
+
+void IdentifierList() : {}
+{
+  Identifier() (LOOKAHEAD(2)  <TOKEN_COMMA> Identifier() )*
+}
+
+void FunctionBody() : {}
+{
+  Block()
+}
+
+void TypeName() #void : {}
+{
+  (LOOKAHEAD(1000)
+  QualifiedIdentifier()
+| Identifier()
+  )
+}
+
+void TypeLit() #void : {}
+{
+  (LOOKAHEAD(1000) ArrayType()
+| (LOOKAHEAD(1000) StructType()
+| (LOOKAHEAD(1000) PointerType()
+| (LOOKAHEAD(1000) FunctionType()
+| (LOOKAHEAD(1000) InterfaceType()
+| (LOOKAHEAD(1000) SliceType()
+| (LOOKAHEAD(1000) MapType()
+| ChannelType()
+)))))))
+}
+
+void MapType() : {}
+{
+  <TOKEN_MAP> <TOKEN_LSQUAREPAREN> Type() <TOKEN_RSQUAREPAREN> Type()
+}
+
+void ChannelType() : {}
+{
+  ( <TOKEN_CHAN> (LOOKAHEAD(2) <TOKEN_LESSMINUS> )? | <TOKEN_LESSMINUS> <TOKEN_CHAN> ) Type()
+}
+
+void ArrayType() : {}
+{
+  <TOKEN_LSQUAREPAREN> Expression() <TOKEN_RSQUAREPAREN> Type()
+}
+
+void StructType() : {}
+{
+  <TOKEN_STRUCT> <TOKEN_LCURLYBRACE> (FieldDecl() (LOOKAHEAD(1000) <TOKEN_SEMICOLON>)?)* <TOKEN_RCURLYBRACE>
+}
+
+void FunctionType() : {}
+{
+  <TOKEN_FUNC> Signature()
+}
+
+void SliceType() : {}
+{
+  <TOKEN_LSQUAREPAREN> <TOKEN_RSQUAREPAREN> Type()
+}
+
+void FieldDecl() : {}
+{
+   (LOOKAHEAD(2) IdentifierList() Type() | (<TOKEN_MULT>)? TypeName()) (StringLiteral())?
+}
+
+void InterfaceType() : {}
+{
+  <TOKEN_INTERFACE> <TOKEN_LCURLYBRACE> ( MethodSpec() (LOOKAHEAD(1000) <TOKEN_SEMICOLON>)? )* <TOKEN_RCURLYBRACE>
+}
+
+void PointerType() : {}
+{
+  <TOKEN_MULT> Type()
+}
+
+void MethodSpec() : {}
+{
+  LOOKAHEAD(1000)
+  MethodName() Signature()
+| InterfaceTypeName()
+}
+
+void MethodName() : {}
+{
+  Identifier()
+}
+
+void InterfaceTypeName() : {}
+{
+  TypeName()
+}
+
+void Type() : {}
+{
+  (LOOKAHEAD(1000) TypeName()
+| (LOOKAHEAD(1000) <TOKEN_LPAREN> Type() <TOKEN_RPAREN>
+| TypeLit()))
+}
+
+void Block() : {}
+{
+  <TOKEN_LCURLYBRACE> StatementList() <TOKEN_RCURLYBRACE>
+}
+
+void StatementList() : {}
+{
+  (LOOKAHEAD(1000) Statement() (<TOKEN_SEMICOLON>)? )*
+}
+
+void Statement() : {}
+{
+  (LOOKAHEAD(1000) LabeledStmt()
+| (LOOKAHEAD(1000) Declaration()
+| (LOOKAHEAD(1000) SimpleStatement()
+| (LOOKAHEAD(1000) GoStmt()
+| (LOOKAHEAD(1000) ReturnStmt()
+| (LOOKAHEAD(1000) BreakStmt()
+| (LOOKAHEAD(1000) ContinueStmt()
+| (LOOKAHEAD(1000) GotoStmt()
+| (LOOKAHEAD(1000) FallthroughStmt()
+| (LOOKAHEAD(1000) Block()
+| (LOOKAHEAD(1000) IfStmt()
+| (LOOKAHEAD(1000) SwitchStmt()
+| (LOOKAHEAD(1000) SelectStmt()
+| (LOOKAHEAD(1000) ForStmt()
+| DeferStmt()
+  ))))))))))))))
+}
+
+void LabeledStmt() : {}
+{
+  Label() <TOKEN_COLON> Statement()
+}
+
+void GoStmt() : {}
+{
+  <TOKEN_GO> Expression()
+}
+
+void ReturnStmt() : {}
+{
+  <TOKEN_RETURN> (LOOKAHEAD(2) ExpressionList())?
+}
+
+void BreakStmt() : {}
+{
+  <TOKEN_BREAK> (LOOKAHEAD(1000) Label())?
+}
+
+void ContinueStmt() : {}
+{
+  <TOKEN_CONTINUE> (LOOKAHEAD(1000) Label())?
+}
+
+void GotoStmt() : {}
+{
+  <TOKEN_GOTO> (LOOKAHEAD(1000) Label())?
+}
+
+void FallthroughStmt() : {}
+{
+  <TOKEN_FALLTROUGH>
+}
+
+void DeferStmt() : {}
+{
+  <TOKEN_DEFER> Expression()
+}
+
+void ElseStmt() : {}
+{
+  <TOKEN_ELSE> ( IfStmt() | Block() )
+}
+
+void IfStmt() : {}
+{
+  <TOKEN_IF> (LOOKAHEAD(1000) SimpleStatement() <TOKEN_SEMICOLON>)? Expression() Block() ( ElseStmt() )?
+}
+
+void SelectStmt() : {}
+{
+  <TOKEN_SELECT> <TOKEN_LCURLYBRACE>
+  (
+  (<TOKEN_CASE> (LOOKAHEAD(1000) SendStmt() | RecvStmt()) | <TOKEN_DEFAULT>) <TOKEN_COLON> StatementList()
+  )*
+  <TOKEN_RCURLYBRACE>
+}
+
+void RecvStmt() : {}
+{
+  (LOOKAHEAD(1000)
+    ( ExpressionList() <TOKEN_EQUAL> Expression())
+  | (LOOKAHEAD(1000) (IdentifierList() <TOKEN_COLONEQUAL> Expression())
+  | Expression()))
+}
+
+void SendStmt() : {}
+{
+  Channel() <TOKEN_LESSMINUS> Expression()
+}
+
+void Channel() : {}
+{
+  Expression()
+}
+
+void SwitchStmt() #void : {}
+{
+  <TOKEN_SWITCH> (LOOKAHEAD(1000) SimpleStatement() <TOKEN_SEMICOLON> )?
+  ( LOOKAHEAD(1000) TypeSwitchStmt() | ExprSwitchStmt() )
+}
+
+void TypeSwitchStmt() : {}
+{
+  (LOOKAHEAD(1000) Identifier() <TOKEN_COLONEQUAL> )? PrimaryExpression() <TOKEN_DOT> <TOKEN_LPAREN> <TOKEN_TYPE> <TOKEN_RPAREN>
+  <TOKEN_LCURLYBRACE> ( LOOKAHEAD(1000) TypeCaseClause() )* <TOKEN_RCURLYBRACE>
+}
+
+void TypeCaseClause() : {}
+{
+  ( (<TOKEN_CASE> Type() (<TOKEN_COMMA> Type())* ) | <TOKEN_DEFAULT>) <TOKEN_COLON> StatementList()
+}
+
+void ExprSwitchStmt() : {}
+{
+  (LOOKAHEAD(1000) Expression() )? <TOKEN_LCURLYBRACE> (LOOKAHEAD(1000) ExprCaseClause() )* <TOKEN_RCURLYBRACE>
+}
+
+void ExprCaseClause() : {}
+{
+  (<TOKEN_CASE> ExpressionList() | <TOKEN_DEFAULT>) <TOKEN_COLON> StatementList()
+}
+
+void ForStmt() : {}
+{
+  <TOKEN_FOR>
+  ( LOOKAHEAD(1000) RangeClause()
+  | (LOOKAHEAD(1000) ForClause()
+  | Condition() )
+  )? Block()
+}
+
+void Condition() : {}
+{
+  Expression()
+}
+
+void ForClause() : {}
+{
+  ( SimpleStatement() )? <TOKEN_SEMICOLON> ( Condition() )? <TOKEN_SEMICOLON> ( SimpleStatement() )?
+}
+
+void RangeClause() : {}
+{
+  (LOOKAHEAD(1000) IdentifierList() <TOKEN_COLONEQUAL>
+  | ExpressionList() <TOKEN_EQUAL> ) <TOKEN_RANGE> Expression()
+}
+
+void Label() : {}
+{
+  Identifier()
+}
+
+void SimpleStatement() : {}
+{
+//EmptyStmt
+  (LOOKAHEAD(1000) SendStmt()
+| (LOOKAHEAD(1000) IncDecStmt()
+| (LOOKAHEAD(1000) ShortVarDecl()
+| (LOOKAHEAD(1000) Assignment()
+| Expression()
+  )))
+  )
+}
+
+void ShortVarDecl() : {}
+{
+//  IdentifierList() <TOKEN_COLONEQUAL> ExpressionList()
+  ExpressionList() <TOKEN_COLONEQUAL> ExpressionList()
+}
+
+void IncDecStmt() #void : {}
+{
+  Expression() (IncStmt() | DecStmt())
+}
+
+void IncStmt() : {}
+{
+  <TOKEN_PLUSPLUS>
+}
+
+void DecStmt() : {}
+{
+  <TOKEN_MINNUSMINUS>
+}
+
+void Assignment() : {}
+{
+  ExpressionList() (<TOKEN_PLUSEQUAL> | <TOKEN_MINUSEQUAL> | <TOKEN_EQUAL> ) ExpressionList()
+}
+
+SimpleNode SourceFile() : {}
+{
+  PackageClause() (LOOKAHEAD(1000) <TOKEN_SEMICOLON>)?
+  ( ImportDecl() (LOOKAHEAD(1000) <TOKEN_SEMICOLON>)? )*
+  ( TopLevelDecl() (LOOKAHEAD(1000) <TOKEN_SEMICOLON>)? )*
+  <EOF> { return jjtThis; }
+}
+
+void PackageClause() : {}
+{
+  <TOKEN_PACKAGE> Identifier()
+}
+
+void ImportDecl() : {}
+{
+  <TOKEN_IMPORT> ( ImportSpec() | <TOKEN_LPAREN> ( ImportSpec() (LOOKAHEAD(1000) <TOKEN_SEMICOLON>)? )* <TOKEN_RPAREN> )
+}
+
+void ImportSpec() #void : {}
+{
+  ( <TOKEN_DOT> | PackageName() )? ImportPath()
+}
+
+void ImportPath() : {}
+{
+  StringLiteral()
+}
+
+void TopLevelDecl() : {}
+{
+  Declaration()
+| <TOKEN_FUNC> (FunctionDecl() | MethodDecl())
+}
+
+void MethodDecl(): {}
+{
+  Reciever() MethodName() (LOOKAHEAD(1000) Function() | Signature())
+}
+
+void Reciever() : {}
+{
+  Parameters()
+}
+
+void Declaration() : {}
+{
+  ConstDecl()
+|  TypeDecl()
+|  VarDecl()
+}
+
+void ConstDecl() : {}
+{
+  <TOKEN_CONST> ( ConstSpec() | <TOKEN_LPAREN> (ConstSpec() (LOOKAHEAD(1000) <TOKEN_SEMICOLON>)?)* <TOKEN_RPAREN>)
+}
+
+void TypeDecl() : {}
+{
+  <TOKEN_TYPE> (TypeSpec() | <TOKEN_LPAREN> (TypeSpec() (LOOKAHEAD(1000) <TOKEN_SEMICOLON>)? )* <TOKEN_RPAREN> )
+}
+
+void TypeSpec() : {}
+{
+  Identifier() Type()
+}
+
+void ConstSpec() : {}
+{
+  IdentifierList() (LOOKAHEAD(1000) (Type())? <TOKEN_EQUAL> ExpressionList() )?
+}
+
+void VarDecl() : {}
+{
+  <TOKEN_VAR> (VarSpec() | <TOKEN_LPAREN> (VarSpec() (<TOKEN_SEMICOLON>)? )* <TOKEN_RPAREN>)
+}
+
+void VarSpec() : {}
+{
+  IdentifierList()
+  (LOOKAHEAD(1000) ( Type() (<TOKEN_EQUAL> ExpressionList())? )
+| ( <TOKEN_EQUAL> ExpressionList() ))
+}
+
+void FunctionDecl() : {}
+{
+  FunctionName() (LOOKAHEAD(1000) Function() | Signature())
+}
+
+void FunctionName() : {}
+{
+  Identifier()
+}
+
+void Identifier() : { Token t; }
+{
+  t = <TOKEN_IDENTIFIER> { jjtThis.value = t.image; }
+}
+
+void PackageName() : { Token t; }
+{
+  t = <TOKEN_IDENTIFIER> { jjtThis.value = t.image; }
+}
+
+void QualifiedIdentifier() #void : {}
+{
+  PackageName() <TOKEN_DOT> Identifier()
+}
+
+void OperandName() #void : {}
+{
+  (LOOKAHEAD(1000)
+  QualifiedIdentifier()
+| Identifier()
+  )
+}
+
+void ReceiverType() : {}
+{
+  (<TOKEN_LPAREN> ( ReceiverType() <TOKEN_RPAREN> | <TOKEN_MULT> TypeName() ) <TOKEN_RPAREN> )
+| TypeName()
+}
+
+void MethodExpression() : {}
+{
+  ReceiverType() <TOKEN_DOT> MethodName()
+}
+
+void Operand() : {}
+{
+  (LOOKAHEAD(1000) OperandName()
+| (LOOKAHEAD(1000) MethodExpression()
+| (LOOKAHEAD(1000) <TOKEN_LPAREN> Expression() <TOKEN_RPAREN>
+| Literal()
+  )))
+}
+
+void Conversion() : {}
+{
+  Type() <TOKEN_LPAREN> Expression() <TOKEN_RPAREN>
+}
+
+void PrimaryExpression() : {}
+{
+  (LOOKAHEAD(1000)
+  Operand() ( LOOKAHEAD(1000) PrimaryExpressionLR() )*
+| Conversion() ( LOOKAHEAD(1000) PrimaryExpressionLR() )*
+  )
+}
+
+//to avoid Left Recursion
+void PrimaryExpressionLR() #void : {}
+{
+  (LOOKAHEAD(1000) Slice()
+| ( LOOKAHEAD(1000) TypeAssertion()
+| ( LOOKAHEAD(1000) Arguments()
+| ( LOOKAHEAD(1000) Index()
+| ( LOOKAHEAD(1000) Selector()
+| PrimaryExpression() PrimaryExpressionLR()
+  )))))
+}
+
+void Slice() : {}
+{
+  <TOKEN_LSQUAREPAREN> ( Expression() )? <TOKEN_COLON>
+  (LOOKAHEAD(1000) Expression() <TOKEN_COLON> )? (LOOKAHEAD(1000) Expression() )? <TOKEN_RSQUAREPAREN>
+}
+
+void TypeAssertion() : {}
+{
+  <TOKEN_DOT> <TOKEN_LPAREN> Type() <TOKEN_RPAREN>
+}
+
+void Selector() : {}
+{
+  <TOKEN_DOT> Identifier()
+}
+
+void Index() : {}
+{
+  <TOKEN_LSQUAREPAREN> Expression() <TOKEN_RSQUAREPAREN>
+}
+
+void Arguments() : {}
+{
+  <TOKEN_LPAREN>
+  (
+  (LOOKAHEAD(1000) ExpressionList() | Type() (LOOKAHEAD(1000) <TOKEN_COMMA> ExpressionList())? )
+  (<TOKEN_ELLIPSIS>)? (<TOKEN_COMMA>)?
+  )?
+  <TOKEN_RPAREN>
+}
+
+void ExpressionList() : {}
+{
+  Expression() (LOOKAHEAD(2) <TOKEN_COMMA> Expression() )*
+}
+
+void UnaryExpression() #void : { Token t; }
+{
+  (LOOKAHEAD(1000)
+  PrimaryExpression()
+| t = <TOKEN_PLUS> UnaryExpression() { jjtThis.value = t.image; } #UnaryPlus(1)
+| t = <TOKEN_MINUS> UnaryExpression() { jjtThis.value = t.image; } #UnaryMinus(1)
+| t = <TOKEN_EXCLAMATION> UnaryExpression() { jjtThis.value = t.image; } #UnaryNot(1)
+| t = <TOKEN_XOR> UnaryExpression() { jjtThis.value = t.image; } #UnaryXor(1)
+| t = <TOKEN_MULT> UnaryExpression() { jjtThis.value = t.image; } #UnaryMult(1)
+| t = <TOKEN_AND> UnaryExpression() { jjtThis.value = t.image; } #UnaryAnd(1)
+| t = <TOKEN_LESSMINUS> UnaryExpression() { jjtThis.value = t.image; } #UnaryLessMinus(1)
+  )
+}
+
+void MultOperators() #void : { Token t; }
+{
+  UnaryExpression() (
+    LOOKAHEAD(1000) ((t = <TOKEN_MULT> UnaryExpression() { jjtThis.value = t.image; }           #Mult(2) )
+  | LOOKAHEAD(1000) ((t = <TOKEN_DIV> UnaryExpression() { jjtThis.value = t.image; }            #Div(2)  )
+  | LOOKAHEAD(1000) ((t = <TOKEN_PERCENT> UnaryExpression() { jjtThis.value = t.image; }        #DivInt(2) )
+  | LOOKAHEAD(1000) ((t = <TOKEN_LESSLESS> UnaryExpression() { jjtThis.value = t.image; }       #ShiftLeft(2) )
+  | LOOKAHEAD(1000) ((t = <TOKEN_GREATERGREATER> UnaryExpression() { jjtThis.value = t.image; } #ShiftRight(2) )
+  | LOOKAHEAD(1000) ((t = <TOKEN_AND> UnaryExpression() { jjtThis.value = t.image; }            #And(2) )
+  | LOOKAHEAD(1000) ((t = <TOKEN_ANDXOR> UnaryExpression() { jjtThis.value = t.image; }         #AndXor(2) )
+    )))))))
+  )*
+}
+
+void AddOperators() #void : { Token t; }
+{
+  MultOperators() (
+    LOOKAHEAD(2) (
+    (t = <TOKEN_PLUS> MultOperators() { jjtThis.value = t.image; }  #Add(2) )
+  | (t = <TOKEN_MINUS> MultOperators() { jjtThis.value = t.image; } #Sub(2) )
+  | (t = <TOKEN_OR> MultOperators() { jjtThis.value = t.image; }    #Or(2)  )
+  | (t = <TOKEN_XOR> MultOperators() { jjtThis.value = t.image; }   #Xor(2) )
+    )
+  )*
+}
+
+void RelOperators() #void : { Token t; }
+{
+  AddOperators() (
+    (t = <TOKEN_EQUALEQUAL> AddOperators() { jjtThis.value = t.image; }   #Equal(2) )
+  | (t = <TOKEN_NOTEQUAL> AddOperators() { jjtThis.value = t.image; }     #NotEqual(2) )
+  | (t = <TOKEN_LESS> AddOperators() { jjtThis.value = t.image; }         #Less(2) )
+  | (t = <TOKEN_LESSOREQUAL> AddOperators() { jjtThis.value = t.image; }  #LessEqual(2) )
+  | (t = <TOKEN_GREATER> AddOperators() { jjtThis.value = t.image; }      #Greater(2) )
+  | (t = <TOKEN_GREATEREQUAL> AddOperators() { jjtThis.value = t.image; } #GreaterEqual(2) )
+  )*
+}
+
+void AndAndOperator() #void : { Token t; }
+{
+  RelOperators() (
+    (t = <TOKEN_ANDAND> RelOperators() { jjtThis.value = t.image; } #AndAnd(2) )
+  )*
+}
+
+void OrOrOperator() #void : { Token t; }
+{
+  AndAndOperator() (
+    (t = <TOKEN_OROR> AndAndOperator() { jjtThis.value = t.image; } #OrOr(2) )
+  )*
+}
+
+void Expression() #void : {}
+{
+  OrOrOperator()
+}

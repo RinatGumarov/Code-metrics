@@ -1,0 +1,1024 @@
+options
+{
+     LOOKAHEAD=3;
+     DEBUG_PARSER = true;
+}
+
+PARSER_BEGIN(Scala)
+
+//package main.parser;
+
+public class Scala {
+
+    public static void main(String args[]) throws ParseException {
+        Scala parser;
+
+        if (args.length == 0) {
+            System.out.println("Scala Parser:  Reading from standard input . . .");
+            parser = new Scala(System.in);
+        } else if (args.length == 1) {
+            System.out.println("Scala Parser:  Reading from file " + args[0] + " . . .");
+            try {
+                parser = new Scala(new java.io.FileInputStream(args[0]));
+            } catch (java.io.FileNotFoundException e) {
+                System.out.println("Scala Parser:  File " + args[0] + " not found.");
+                return;
+            }
+        } else {
+            System.out.println("Scala Parser:  Usage is one of:");
+            System.out.println("         java ScalaParser < inputfile");
+            System.out.println("OR");
+            System.out.println("         java ScalaParser inputfile");
+            return;
+        }
+
+        parser.javacc_input();
+        System.out.println("Scala Parser:  Scala program parsed successfully.");
+    }
+}
+
+PARSER_END(Scala)
+
+/* WHITE SPACE */
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+| "\f"
+}
+
+/* COMMENTS */
+
+MORE :
+{
+  "//" : IN_SINGLE_LINE_COMMENT
+|
+  <"/**" ~["/"]> { input_stream.backup(1); } : IN_FORMAL_COMMENT
+|
+  "/*" : IN_MULTI_LINE_COMMENT
+}
+
+<IN_SINGLE_LINE_COMMENT>
+SPECIAL_TOKEN :
+{
+  <SINGLE_LINE_COMMENT: "\n" | "\r" | "\r\n" > : DEFAULT
+}
+
+<IN_FORMAL_COMMENT>
+SPECIAL_TOKEN :
+{
+  <FORMAL_COMMENT: "*/" > : DEFAULT
+}
+
+<IN_MULTI_LINE_COMMENT>
+SPECIAL_TOKEN :
+{
+  <MULTI_LINE_COMMENT: "*/" > : DEFAULT
+}
+
+<IN_SINGLE_LINE_COMMENT,IN_FORMAL_COMMENT,IN_MULTI_LINE_COMMENT>
+MORE :
+{
+  < ~[] >
+}
+
+/* SCALA RESERVED WORDS AND LITERALS */
+
+TOKEN :
+{
+    < ABSTRACT: "abstract" >
+    | < CASE: "case" >
+    | < CATCH: "catch" >
+    | < CLASS: "class" >
+    | < DEF: "def">
+    | < DO: "do" >
+    | < ELSE: "else" >
+    | < EXTENDS: "extends" >
+    | < FALSE: "false" >
+    | < FINAL: "final" >
+    | < FINALLY: "finally" >
+    | < FOR: "for" >
+    | < FORSOME: "forSome">
+    | < IF: "if" >
+    | < IMPLICIT: "implicit">
+    | < IMPORT: "import" >
+    | < LAZY: "lazy" >
+    | < MATCH: "match" >
+    | < NEW: "new" >
+    | < NULL: "null" >
+    | < OBJECT: "object" >
+    | < OVERRIDE: "override" >
+    | < PACKAGE: "package" >
+    | < PRIVATE: "private" >
+    | < PROTECTED: "protected" >
+    | < PUBLIC: "public" >
+    | < RETURN: "return" >
+    | < SEALED: "sealed" >
+    | < SUPER: "super" >
+    | < THIS: "this" >
+    | < THROW: "throw" >
+    | < TRAIT: "trait" >
+    | < TRUE: "true" >
+    | < TRY: "try" >
+    | < TYPE: "type" >
+    | < VAL: "val" >
+    | < VAR: "var" >
+    | < WHILE: "while" >
+    | < WITH: "with" >
+    | < YIELD: "yield">
+}
+
+/* SCALA LITERALS */
+
+TOKEN :
+{
+  < INTEGER_LITERAL:
+        <DECIMAL_LITERAL> (["l","L"])?
+      | <HEX_LITERAL> (["l","L"])?
+      | <OCTAL_LITERAL> (["l","L"])?
+  >
+|
+  < #DECIMAL_LITERAL: ["1"-"9"] (["0"-"9"])* >
+|
+  < #HEX_LITERAL: "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+ >
+|
+  < #OCTAL_LITERAL: "0" (["0"-"7"])* >
+|
+  < FLOATING_POINT_LITERAL:
+        (["0"-"9"])+ "." (["0"-"9"])* (<EXPONENT>)? (["f","F","d","D"])?
+      | "." (["0"-"9"])+ (<EXPONENT>)? (["f","F","d","D"])?
+      | (["0"-"9"])+ <EXPONENT> (["f","F","d","D"])?
+      | (["0"-"9"])+ (<EXPONENT>)? ["f","F","d","D"]
+  >
+|
+  < #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
+|
+  < CHARACTER_LITERAL:
+      "'"
+      (   (~["'","\\","\n","\r"])
+        | ("\\"
+            ( ["n","t","b","r","f","\\","'","\""]
+            | ["0"-"7"] ( ["0"-"7"] )?
+            | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+            )
+          )
+      )
+      "'"
+  >
+|
+  < STRING_LITERAL:
+      "\""
+      (   (~["\"","\\","\n","\r"])
+        | ("\\"
+            ( ["n","t","b","r","f","\\","'","\""]
+            | ["0"-"7"] ( ["0"-"7"] )?
+            | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+            )
+          )
+      )*
+      "\""
+  >
+}
+
+/* IDENTIFIERS */
+
+TOKEN :
+{
+  < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
+|
+  < #LETTER:
+      [
+       "\u0024",
+       "\u0041"-"\u005a",
+       "\u005f",
+       "\u0061"-"\u007a",
+       "\u00c0"-"\u00d6",
+       "\u00d8"-"\u00f6",
+       "\u00f8"-"\u00ff",
+       "\u0100"-"\u1fff",
+       "\u3040"-"\u318f",
+       "\u3300"-"\u337f",
+       "\u3400"-"\u3d2d",
+       "\u4e00"-"\u9fff",
+       "\uf900"-"\ufaff"
+      ]
+  >
+|
+  < #DIGIT:
+      [
+       "\u0030"-"\u0039",
+       "\u0660"-"\u0669",
+       "\u06f0"-"\u06f9",
+       "\u0966"-"\u096f",
+       "\u09e6"-"\u09ef",
+       "\u0a66"-"\u0a6f",
+       "\u0ae6"-"\u0aef",
+       "\u0b66"-"\u0b6f",
+       "\u0be7"-"\u0bef",
+       "\u0c66"-"\u0c6f",
+       "\u0ce6"-"\u0cef",
+       "\u0d66"-"\u0d6f",
+       "\u0e50"-"\u0e59",
+       "\u0ed0"-"\u0ed9",
+       "\u1040"-"\u1049"
+      ]
+  >
+}
+
+/* SEPARATORS */
+
+TOKEN :
+{
+  < LPAREN: "(" >
+| < RPAREN: ")" >
+| < LBRACE: "{" >
+| < RBRACE: "}" >
+| < LBRACKET: "[" >
+| < RBRACKET: "]" >
+| < SEMICOLON: ";" >
+| < COMMA: "," >
+| < DOT: "." >
+}
+
+
+// Lexer
+
+TOKEN :
+{
+    < BooleanLiteral:  "true" | "false" >
+    | < CharacterLiteral:  "'" (<PrintableChar> | <CharEscapeSeq>) "'" >
+    | < StringLiteral: "\"" (<StringElement>)* "\"" |  "\"\"\"" <MultiLineChars> "\"\"\"" >
+    | < SymbolLiteral: "'" <Plainid> >
+    | < IntegerLiteral: (<DecimalNumeral> | <HexNumeral>) ("L" | "l") >
+    | < FloatingPointLiteral: (<Digit>)+ "." (<Digit>)+ (<ExponentPart>)? (<FloatType>)?
+                               |  "." (<Digit>)+ (<ExponentPart>)? (<FloatType>)?
+                               |  <Digit> <ExponentPart> (<FloatType>)?
+                               |  (<Digit>)+ (<ExponentPart>)? <FloatType> >
+    | < Id: <Plainid> |  "`" <StringLiteral> "`" >
+    | < Varid: <Lower> <Idrest> >
+    | < Nl: ("\r")? "\n" >
+    | < Semi: ";" |  (<Nl>)+ >
+    | < Paren: "(" | ")" | "[" | "]" | "{" | "}" >
+    | < Delim: "`" | "'" | "\"" | "." | ";" | "," >
+    | < Comment:  "/*" ((["A"-"Z","a"-"z","0"-"9"] | " ")*)? "*/" | "//" ((["A"-"Z","a"-"z","0"-"9"] | " ")*)? <Nl> >
+    //| < Comment:  "/*" .*?  "*/" |  "//" .*? <Nl> >
+}
+
+TOKEN :
+{
+    < UnicodeEscape: "\\" "u" ("u")? <HexDigit> <HexDigit> <HexDigit> <HexDigit> >
+    | < Opchar: <PrintableChar> >
+    | < Op: (<Opchar>)+ >
+    | < Plainid: <Upper> <Idrest> | <Varid> | <Op> >
+    | < Idrest: (<Letter> | <Digit>)* ("_" <Op>)? >
+    | < StringElement: "\u0020" | "\u0021" | (["\u0023"-"\u007F"]) | <CharEscapeSeq> >
+    | < MultiLineChars: (("\"")? ("\"")? ((["A"-"Z","a"-"z","0"-"9"])*)? )* ("\"")* >
+    //| < MultiLineChars: (("\"")? ("\"")? .*?)* ("\"")* >
+    | < HexDigit: ["0" - "9"] | ["A" - "Z"] | ["a" - "z"] >
+    | < FloatType: "F" | "f" | "D" | "d" >
+    | < Upper: ["A" - "Z"] | "$" | "_" >
+    | < Lower: ["a" - "z"] >
+    | < Letter: <Upper> | <Lower> >
+    | < ExponentPart:  ("E" | "e") ("+" | "-")? (<Digit>)+ >
+    | < PrintableChar: ["\u0020" - "\u007F"] >
+    | < CharEscapeSeq: "\\" ("b" | "t" | "n" | "f" | "r" | "\"" | "'" | "\\") >
+    | < DecimalNumeral:  "0" | <NonZeroDigit> (<Digit>)* >
+    | < HexNumeral:  "0" "x" <HexDigit> (<HexDigit>)+ >
+    | < Digit: "0" | <NonZeroDigit> >
+    | < NonZeroDigit: ["1" - "9"] >
+}
+
+void javacc_input() :
+{}
+{
+  "PARSER_BEGIN" "(" identifier() ")"
+  CompilationUnit()
+  "PARSER_END" "(" identifier() ")"
+  <EOF>
+}
+
+void identifier() :
+{}
+{
+  <IDENTIFIER>
+}
+
+void Literal() :
+{}
+{
+    ("-")? <IntegerLiteral>
+    | ("-")? <FloatingPointLiteral>
+    | <BooleanLiteral>
+    | <CharacterLiteral>
+    | <StringLiteral>
+    | <SymbolLiteral>
+    | "null"
+}
+
+void QualId() :
+{}
+{
+    <Id> ("." <Id>)*
+}
+
+void Ids() :
+{}
+{
+    <Id> ("," <Id>)*
+}
+
+void StableId() :
+{}
+{
+    (<Id> | (<Id> ".")? <THIS>) "." <Id>
+    | (<Id> ".")? <SUPER> (ClassQualifier())? "." <Id>
+}
+
+void ClassQualifier() :
+{}
+{
+    "[" <Id> "]"
+}
+
+void Type() :
+{}
+{
+    FunctionArgTypes() "=>" Type()
+    | InfixType() (ExistentialClause())?
+}
+
+void FunctionArgTypes() :
+{}
+{
+    InfixType()
+    | "(" ( ParamType() ("," ParamType())* )? ")"
+}
+
+void ExistentialClause() :
+{}
+{
+    <FORSOME> "{" ExistentialDcl() (<Semi> ExistentialDcl())* "}"
+}
+
+void ExistentialDcl() :
+{}
+{
+    <TYPE> TypeDcl()
+    | <VAL> ValDcl()
+}
+
+void InfixType() :
+{}
+{
+    CompoundType() (<Id> (<Nl>)? CompoundType())*
+}
+
+void CompoundType() :
+{}
+{
+    AnnotType() (<WITH> AnnotType())* (Refinement())?
+    | Refinement()
+}
+
+void AnnotType() :
+{}
+{
+    SimpleType() (Annotation())*
+}
+
+void SimpleType() :
+{}
+{
+    SimpleType1() (TypeArgs() | "#" <Id>)*
+}
+
+void SimpleType1() :
+{}
+{
+    StableId() ("" | "." <TYPE>)
+    | (<Id> ".")? <THIS> "." <TYPE>
+    | "(" Types() ")"
+}
+
+void TypeArgs() :
+{}
+{
+    "[" Types() "]"
+}
+
+void Types() :
+{}
+{
+    Type() ("," Type())*
+}
+
+void Refinement() :
+{}
+{
+    (<Nl>)? "{" RefineStat() (<Semi> RefineStat())* "}"
+}
+
+void RefineStat() :
+{}
+{
+    Dcl()
+    | <TYPE> TypeDef()
+}
+
+void TypePat() :
+{}
+{
+    Type()
+}
+
+void Ascription() :
+{}
+{
+    ":" InfixType()
+    | ":" (Annotation())+
+    | ":" "_" "*"
+}
+
+void Expr() :
+{}
+{
+    (Bindings() | (<IMPLICIT>)? <Id> | "_") "=>" Expr()
+    | Expr1()
+}
+
+void Expr1() :
+{}
+{
+    <IF> "(" Expr() ")" (<Nl>)* Expr() ((<Semi>)? <ELSE> Expr())?
+    | <WHILE> "(" Expr() ")" (<Nl>)* Expr()
+    | <TRY> ("{" Block() "}" | Expr()) (<CATCH> "{" CaseClauses() "}")? (<FINALLY> Expr())?
+    | <DO> Expr() (<Semi>)? <WHILE> "(" Expr() ")"
+    | <FOR> ("(" Enumerators() ")" | "{" Enumerators() "}") (<Nl>)* (<YIELD>)? Expr()
+    | <THROW> Expr()
+    | <RETURN> (Expr())?
+    | ((<NEW> (ClassTemplate() | TemplateBody())| BlockExpr() | SimpleExpr1() ("_")?) ".") <Id> "=" Expr()
+    | SimpleExpr1() ArgumentExprs() "=" Expr()
+    | PostfixExpr() ( Ascription() | (<MATCH> "{" CaseClauses() "}") )?
+}
+
+void PostfixExpr() :
+{}
+{
+    InfixExpr() (<Id> (<Nl>)?)?
+}
+
+void InfixExpr() :
+{}
+{
+    InfixExpr1() <Id> (<Nl>)? InfixExpr1()
+}
+
+void InfixExpr1() :
+{}
+{
+    PrefixExpr()
+}
+
+void PrefixExpr() :
+{}
+{
+    ("-" | "+" | "~" | "!")?
+    (<NEW> (ClassTemplate() | TemplateBody())| BlockExpr() | SimpleExpr1() ("_")?)
+}
+
+void SimpleExpr1() :
+{}
+{
+    SimpleExpr2() (ArgumentExprs())*
+}
+
+void SimpleExpr2() :
+{}
+{
+    Literal()
+    | StableId()
+    | (<Id> ".")? "This"
+    | "_"
+    | "(" (Exprs())? ")"
+    | (<NEW> (ClassTemplate() | TemplateBody()) | BlockExpr() ) ("." <Id> | TypeArgs())
+}
+
+void Exprs() :
+{}
+{
+    Expr() ("," Expr())*
+}
+
+void ArgumentExprs() :
+{}
+{
+    "(" (Exprs())? ")"
+    | "(" (Exprs() ",")? PostfixExpr() ":" "_" "*" ")"
+    | (<Nl>)? BlockExpr()
+}
+
+void BlockExpr() :
+{}
+{
+    "{" CaseClauses() "}"
+    | "{" Block() "}"
+}
+
+void Block() :
+{}
+{
+    BlockStat() (<Semi> BlockStat())* (ResultExpr())?
+}
+
+void BlockStat() :
+{}
+{
+    Import_()
+    | (Annotation())* (<IMPLICIT> | <LAZY>)? Def()
+    | (Annotation())* (LocalModifier())* TmplDef()
+    | Expr1()
+}
+
+void ResultExpr() :
+{}
+{
+    Expr1()
+    | (Bindings() | ((<IMPLICIT>)? <Id> | "_") ":" CompoundType()) "=>" Block()
+}
+
+void Enumerators() :
+{}
+{
+    Generator() (<Semi> Generator())*
+}
+
+void Generator() :
+{}
+{
+    Pattern1() "<-" Expr() ((<Semi>)? Guard() | <Semi> Pattern1() "=" Expr())*
+}
+
+void CaseClauses() :
+{}
+{
+    (CaseClause())+
+}
+
+void CaseClause() :
+{}
+{
+    <CASE> Pattern() (Guard())? "=>" Block()
+}
+
+void Guard() :
+{}
+{
+    <IF> PostfixExpr()
+}
+
+void Pattern() :
+{}
+{
+    Pattern1() ("|" Pattern1() )*
+}
+
+void Pattern1() :
+{}
+{
+    <Varid> ":" TypePat()
+    | "_" ":" TypePat()
+    | Pattern2()
+}
+
+void Pattern2() :
+{}
+{
+    <Varid> ("@" Pattern3())?
+    | Pattern3()
+}
+
+void Pattern3() :
+{}
+{
+    SimplePattern()
+    | SimplePattern() (<Id> (<Nl>)? SimplePattern())*
+}
+
+void SimplePattern() :
+{}
+{
+    "_"
+    | <Varid>
+    | Literal()
+    | StableId() ("(" Patterns() ")")?
+    | StableId() "(" (Patterns() ",")? (<Varid> "@")? "_" "*" ")"
+    | ("(" (Patterns()) ")" ) ?
+}
+
+void Patterns() :
+{}
+{
+    Pattern() ("," Patterns())*
+    | ("_")*
+}
+
+void TypeParamClause() :
+{}
+{
+    "[" VariantTypeParam() ("," VariantTypeParam())* "]"
+}
+
+void FunTypeParamClause() :
+{}
+{
+    "[" TypeParam() ("," TypeParam())* "]"
+}
+
+void VariantTypeParam() :
+{}
+{
+    (Annotation())? ("+" | "-")? TypeParam()
+}
+
+void TypeParam() :
+{}
+{
+    (<Id> | "_") (TypeParamClause())? (">:" Type())? ("<:" Type())?
+    ("<%" Type())* (":" Type())*
+}
+
+void ParamClauses() :
+{}
+{
+    (ParamClause())* ((<Nl>)? "(" <IMPLICIT> Params() ")")?
+}
+
+void ParamClause() :
+{}
+{
+    (<Nl>)? "(" (Params())? ")"
+}
+
+void Params() :
+{}
+{
+    Param() ("," Param())*
+}
+
+void Param() :
+{}
+{
+    (Annotation())* <Id> (":" ParamType())? ("=" Expr())?
+}
+
+void ParamType() :
+{}
+{
+    Type()
+    | "=>" Type()
+    | Type() "*"
+}
+
+void ClassParamClauses() :
+{}
+{
+    (ClassParamClause())*
+    ((<Nl>)? "(" <IMPLICIT> ClassParams() ")")?
+}
+
+void ClassParamClause() :
+{}
+{
+    (<Nl>)? "(" (ClassParams())? ")"
+}
+
+void ClassParams() :
+{}
+{
+    ClassParam() ("," ClassParam())*
+}
+
+void ClassParam() :
+{}
+{
+    (Annotation())* (Modifier())* (<VAL> | <VAR>)?
+    <Id> ":" ParamType() ("=" Expr())?
+}
+
+void Bindings() :
+{}
+{
+    "(" Binding() ("," Binding() )* ")"
+}
+
+void Binding() :
+{}
+{
+    (<Id> | "_") (":" Type())?
+}
+
+void Modifier() :
+{}
+{
+    LocalModifier()
+    | AccessModifier()
+    | <OVERRIDE>
+}
+
+void LocalModifier() :
+{}
+{
+    <ABSTRACT>
+    | <FINAL>
+    | <SEALED>
+    | <IMPLICIT>
+    | <LAZY>
+}
+
+void AccessModifier() :
+{}
+{
+    (<PRIVATE> | <PROTECTED>) (AccessQualifier())?
+}
+
+void AccessQualifier() :
+{}
+{
+    "[" (<Id> | <THIS>) "]"
+}
+
+void Annotation() :
+{}
+{
+    "@" SimpleType() (ArgumentExprs())*
+}
+
+void ConstrAnnotation() :
+{}
+{
+    "@" SimpleType() ArgumentExprs()
+}
+
+vid TemplateBody() :
+{}
+{
+    (<Nl>)? "{" (SelfType())? TemplateStat() (<Semi> TemplateStat())* "}"
+}
+
+void TemplateStat() :
+{}
+{
+    Import_()
+    | (Annotation() (<Nl>)?)* (Modifier())* (Def() | Dcl())
+    |  Expr()
+}
+
+void SelfType() :
+{}
+{
+    <Id> (":" Type())? "=>"
+    | <THIS> ":" Type() "=>"
+}
+
+void Import_() :
+{}
+{
+    <IMPORT> ImportExpr() ("," ImportExpr())*
+}
+
+void ImportExpr() :
+{}
+{
+    StableId() "." (<Id> | "_" | ImportSelectors())
+}
+
+void ImportSelectors() :
+{}
+{
+    "{" (ImportSelector() ",")* (ImportSelector() | "_") "}"
+}
+
+void ImportSelector() :
+{}
+{
+    <Id> ("=>" <Id> | "=>" "_")
+}
+
+void Dcl() :
+{}
+{
+    <VAL> ValDcl()
+    | <VAR> VarDcl()
+    | <DEF> FunDcl()
+    | <TYPE> (<Nl>)* TypeDcl()
+}
+
+void ValDcl() :
+{}
+{
+    Ids() ":" Type()
+}
+
+void VarDcl() :
+{}
+{
+    Ids() ":" Type()
+}
+
+void FunDcl() :
+{}
+{
+    FunSig() (":" Type())?
+}
+
+void FunSig() :
+{}
+{
+    <Id> (FunTypeParamClause())? ParamClauses()
+}
+
+void TypeDcl() :
+{}
+{
+    <Id> (TypeParamClause())? (">:" Type())? ("<:" Type())?
+}
+
+void PatVarDef() :
+{}
+{
+    <VAL> (PatDef() | VarDef())
+}
+
+void Def() :
+{}
+{
+    PatVarDef()
+    | <DEF> FunDef()
+    | <TYPE> (<Nl>)* TypeDef()
+    | TmplDef()
+}
+
+void PatDef() :
+{}
+{
+    Pattern2() ("," Pattern2())* (":" Type())* "=" Expr()
+}
+
+void VarDef() :
+{}
+{
+    PatDef()
+    | Ids() ":" Type() "=" "_"
+}
+
+void FunDef() :
+{}
+{
+    FunSig ()(":" Type())? "=" Expr()
+    | FunSig() (<Nl>)? "{" Block() "}"
+    | <THIS> ParamClause() ParamClauses()
+    ("=" ConstrExpr() | <Nl> ConstrBlock())
+}
+
+void TypeDef() :
+{}
+{
+    <Id> (TypeParamClause())? "=" Type()
+}
+
+void TmplDef() :
+{}
+{
+    (<CASE>)? <CLASS> ClassDef()
+    | <CASE> <OBJECT> ObjectDef()
+    | <TRAIT> TraitDef()
+}
+
+void ClassDef() :
+{}
+{
+    <Id> (TypeParamClause())? (ConstrAnnotation())* (AccessModifier())?
+    ClassParamClauses() ClassTemplateOpt()
+}
+
+void TraitDef() :
+{}
+{
+    <Id> (TypeParamClause())? TraitTemplateOpt()
+}
+
+void ObjectDef() :
+{}
+{
+    <Id> ClassTemplateOpt()
+}
+
+void ClassTemplateOpt() :
+{}
+{
+    <EXTENDS> ClassTemplate() | ((<EXTENDS>)? TemplateBody())?
+}
+
+void TraitTemplateOpt() :
+{}
+{
+    <EXTENDS> TraitTemplate() | ((<EXTENDS>)? TemplateBody())?
+}
+
+void ClassTemplate() :
+{}
+{
+    (EarlyDefs())? ClassParents() (TemplateBody())?
+}
+
+void TraitTemplate() :
+{}
+{
+    (EarlyDefs())? TraitParents() (TemplateBody())?
+}
+
+void ClassParents() :
+{}
+{
+    Constr() (<WITH> AnnotType())*
+}
+
+void TraitParents() :
+{}
+{
+    AnnotType() (<WITH> AnnotType())*
+}
+
+void Constr() :
+{}
+{
+    AnnotType() (ArgumentExprs())*
+}
+
+void EarlyDefs() :
+{}
+{
+    "{" (EarlyDef() (<Semi> EarlyDef())*)? "}" <WITH>
+}
+
+void EarlyDef() :
+{}
+{
+    (Annotation() (<Nl>)?)* (Modifier())* PatVarDef()
+}
+
+void ConstrExpr() :
+{}
+{
+    SelfInvocation()
+    | ConstrBlock()
+}
+
+void ConstrBlock() :
+{}
+{
+    "{" SelfInvocation() (<Semi> BlockStat())* "}"
+}
+
+void SelfInvocation() :
+{}
+{
+    <THIS> (ArgumentExprs())+
+}
+
+void TopStatSeq() :
+{}
+{
+    TopStat() (<Semi> TopStat())*
+}
+
+void TopStat() :
+{}
+{
+    (Annotation() (<Nl>)?)* (Modifier())* TmplDef()
+    | Import_()
+    | Packaging()
+    | PackageObject()
+}
+
+void Packaging() :
+{}
+{
+    <PACKAGE> QualId() (<Nl>)? "{" TopStatSeq() "}"
+}
+
+void PackageObject() :
+{}
+{
+    <PACKAGE> <OBJECT> ObjectDef()
+}
+
+void CompilationUnit() :
+{}
+{
+    (<PACKAGE> QualId() <Semi>)* TopStatSeq()
+}
+

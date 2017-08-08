@@ -1,0 +1,935 @@
+options {
+//    DEBUG_PARSER = true;
+}
+
+PARSER_BEGIN(PerlParser)
+
+public class PerlParser {
+
+    private static int numStringOperators = 0;
+        private static int numNumericOperators = 0;
+        private static int linesOfCode = 0;
+        private static int numScalars = 0;
+        private static int arrayGets = 0;
+        private static int hashGets = 0;
+        private static int numArrays = 0;
+        private static int numHashes = 0;
+        private static int numBranches = 0;
+        private static int numCycles = 0;
+        private static int regexes = 0;
+        private static int functions = 0;
+
+        public static void main(String args[]) throws Exception {
+          PerlParser parser;
+
+          String filename = "info.csv";
+          if (args.length == 2) {
+              filename = args[1];
+          } else if (args.length != 1) {
+              System.out.println("Perl Parser usage: java PerlParser inputdir [outputfile]");
+          }
+          java.io.File folder = new java.io.File(args[0]);
+          java.io.PrintStream out = new java.io.PrintStream(filename);
+          out.println("File name, Lines of code, Scalars, Arrays, Hashes, Branches (non-cyclic), " +
+              "Cycles, String operators (. lt gt ne etc), Numeric operators (+ < > != etc), " +
+              "Array gets, Hash gets, Regexes, Functions, Cyclomatic complexity");
+          for (java.io.File file : folder.listFiles()) {
+            parser = new PerlParser(new java.io.FileInputStream(file));
+            linesOfCode = numScalars = numArrays = numHashes = numBranches = numCycles = numStringOperators
+                = numNumericOperators = arrayGets = hashGets = regexes = functions = 0;
+            try {
+              parser.CompilationUnit();
+              out.print(file.getName() + ", ");
+              out.print(linesOfCode + ", ");
+              out.print(numScalars + ", ");
+              out.print(numArrays + ", ");
+              out.print(numHashes + ", ");
+              out.print(numBranches + ", ");
+              out.print(numCycles + ", ");
+              out.print(numStringOperators + ", ");
+              out.print(numNumericOperators + ", ");
+              out.print(arrayGets + ", ");
+              out.print(hashGets + ", ");
+              out.print(regexes + ", ");
+              out.print(functions + ", ");
+              out.print((numBranches + numCycles));
+              out.println();
+            } catch (ParseException e) {
+              System.out.println(e.getMessage());
+              System.out.println("Perl Parser:    Encountered errors during parse.");
+            }
+          }
+          out.close();
+        }
+}
+
+PARSER_END(PerlParser)
+
+
+/* WHITE SPACE */
+
+SKIP :
+{
+    " "
+| "\t"
+| "\n"
+| "\r"
+| "\f"
+}
+
+/* COMMENTS */
+
+MORE :
+{
+    "#" : IN_SINGLE_LINE_COMMENT
+}
+
+<IN_SINGLE_LINE_COMMENT>
+SPECIAL_TOKEN :
+{
+    <SINGLE_LINE_COMMENT: "\n" | "\r" | "\r\n" > : DEFAULT
+}
+
+<IN_SINGLE_LINE_COMMENT>
+MORE :
+{
+    < ~[] >
+}
+
+/* RESERVED WORDS AND LITERALS */
+
+TOKEN :
+{
+    < __DATA__: "__DATA__" >
+| < __END__: "__END__" >
+| < __FILE__: "__FILE__" >
+| < __LINE__: "__LINE__" >
+| < __PACKAGE__: "__PACKAGE__" >
+| < AND: "and" >
+| < SCMP: "cmp" >
+| < CONTINUE: "continue" >
+| < CORE: "CORE" >
+| < DO: "do" >
+| < ELSE: "else" >
+| < ELSIF: "elsif" >
+| < SEQ: "eq" >
+| < EXP: "exp" >
+| < FOR: "for" >
+| < FOREACH: "foreach" >
+| < SGE: "ge" >
+| < SGT: "gt" >
+| < IF: "if" >
+| < SLE: "le" >
+| < LOCK: "lock" >
+| < SLT: "lt" >
+| < M: "m" >
+| < SNE: "ne" >
+| < NO: "no" >
+| < OR: "or" >
+| < PACKAGE: "package" >
+| < Q: "q" >
+| < QQ: "qq" >
+| < QR: "qr" >
+| < QW: "qw" >
+| < QX: "qx">
+| < SUB: "sub" >
+| < TR: "tr" >
+| < UNLESS: "unless" >
+| < UNTIL: "until" >
+| < WHILE: "while" >
+| < XXOR: "xor" >
+| < Y: "y" >
+| < MY: "my" >
+| < WHEN: "when" >
+| < GIVEN: "given" >
+| < RETURN: "return" >
+| < DEFAULT_: "default" >
+| < BEGIN_: "BEGIN" >
+| < EVAL: "eval" >
+| < LOCAL: "local" >
+| < POD_DEC: "=pod" >
+| < HEAD1: "=head1" >
+| < HEAD2: "=head2" >
+| < HEAD3: "=head3" >
+| < HEAD4: "=head4" >
+| < OVER: "=over" >
+| < ITEM: "=item" >
+| < BEGIN: "=begin" >
+| < BACK: "=back" >
+| < END: "=end" >
+| < POD_FOR: "=for" >
+| < ENCODING: "=encoding" >
+| < CUT: "=cut" >
+}
+
+
+/* LITERALS */
+
+TOKEN :
+{
+    < INTEGER_LITERAL:
+                <DECIMAL_LITERAL>
+            | <HEX_LITERAL>
+            | <OCTAL_LITERAL>
+            | <BINARY_LITERAL>
+    >
+|
+    < #DECIMAL_LITERAL: ["1"-"9"] (["0"-"9"])* >
+|
+    < #BINARY_LITERAL: "0" ["b","B"] (["0"-"1"])+ >
+|
+    < #HEX_LITERAL: "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+ >
+|
+    < #OCTAL_LITERAL: "0" (["0"-"7"])* >
+|
+    < FLOATING_POINT_LITERAL:
+                (["0"-"9"])+ "." (["0"-"9"])* (<EXPONENT>)? (["f","F","d","D"])?
+            | "." (["0"-"9"])+ (<EXPONENT>)? (["f","F","d","D"])?
+            | (["0"-"9"])+ <EXPONENT> (["f","F","d","D"])?
+            | (["0"-"9"])+ (<EXPONENT>)? ["f","F","d","D"]
+    >
+|
+    < #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
+|
+    < STRING_LITERAL:
+            <SINGLE_QUOTE_STRING> | <DOUBLE_QUOTE_STRING> | <Q_STRING> | <QQ_STRING>
+    >
+|
+    < DOUBLE_QUOTE_STRING:
+        "\""
+        (     (~["\"","\\","$"])
+            | ("\\"
+                    ( ["n","t","$","%","@","b","r","f","\\","'","\"","."]
+                    | ["0"-"7"] ( ["0"-"7"] )?
+                    | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+                    )
+                )
+            |
+               (<SCALAR_NAME> | <ARRAY_NAME> | <HASH_NAME>)
+        )*
+        "\""
+    >
+|
+    < QQ_STRING:
+        "qq("
+        (     (~["\\", "$", ")", "("])
+            | ("\\"
+                    ( ["n","t","$","%","@","b","r","f","\\","'","\"","(",")","."]
+                    | ["0"-"7"] ( ["0"-"7"] )?
+                    | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+                    )
+                )
+            |
+               (<SCALAR_NAME> | <ARRAY_NAME> | <HASH_NAME>)
+        )*
+        ")"
+    >
+|
+    < SINGLE_QUOTE_STRING:
+        "'"
+        (     (~["'","\\"])
+            |
+                "\\\\"
+            |
+                "\\'"
+        )*
+        "'"
+    >
+|
+    < POD:
+        (<POD_DEC> | <HEAD1> | <HEAD2> | <HEAD3> | <HEAD4> | <OVER> | <ITEM> | <BEGIN>
+         | <BACK> | <END> | <POD_FOR> | <ENCODING> )
+         (<POD_DEC> | <HEAD1> | <HEAD2> | <HEAD3> | <HEAD4> | <OVER> | <ITEM> | <BEGIN>
+                   | <BACK> | <END> | <POD_FOR> | <ENCODING> | (~["="]) | ("\\" <CUT>)) *
+         <CUT>
+    >
+|
+    < Q_STRING:
+        "q("
+        (     (~["\"","\\",")","("])
+            |
+                "\\\\"
+            |
+                "\\'"
+            |
+                "\\)"
+            |
+                "\\("
+        )*
+        ")"
+    >
+|
+    < REGEX_LITERAL:
+        ("/"
+                             (     (~["/","\\"])
+                                 | ("\\"
+                                         ( ["n","t","$","%","@","b","r","f","\\","/","\"","'","`","[","]","-","=","!"]
+                                         | ["0"-"7"] ( ["0"-"7"] )?
+                                         | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+                                         )
+                                     )
+                                 |
+                            (<SCALAR_NAME> | <ARRAY_NAME> | <HASH_NAME>)
+                             )* | ("s" "/"
+                                                           (     (~["/","\\"])
+                                                               | ("\\"
+                                                                       ( ["n","t","$","%","@","b","r","f","\\","/","\"","'","`","[","]","-","=","!"]
+                                                                       | ["0"-"7"] ( ["0"-"7"] )?
+                                                                       | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+                                                                       )
+                                                                   )
+                                                               |
+                                                          (<SCALAR_NAME> | <ARRAY_NAME> | <HASH_NAME>)
+                                                           )*"/"
+                                                                                 (     (~["/","\\"])
+                                                                                     | ("\\"
+                                                                                             ( ["n","t","$","%","@","b","r","f","\\","/","\"","'","`","[","]","-","=","!"]
+                                                                                             | ["0"-"7"] ( ["0"-"7"] )?
+                                                                                             | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+                                                                                             )
+                                                                                         )
+                                                                                     |
+                                                                                (<SCALAR_NAME> | <ARRAY_NAME> | <HASH_NAME>)
+                                                                                 )*)) "/" ("g")?
+    >
+|
+    < CMD_LITERAL:
+        "`"
+                (     (~["`","\\","$"])
+                    | ("\\"
+                            ( ["n","t","$","%","@","b","r","f","\\","'","\"","`"]
+                            | ["0"-"7"] ( ["0"-"7"] )?
+                            | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+                            )
+                        )
+                    |
+               (<SCALAR_NAME> | <ARRAY_NAME> | <HASH_NAME>)
+                )*
+                "`"
+    >
+}
+
+/* IDENTIFIERS */
+
+TOKEN :
+{
+    < IDENTIFIER: <ONE_LETTER> | (<LETTER> (<PART_LETTER>)+) >
+//    < IDENTIFIER: (<PART_LETTER>)+ >
+|
+    < SCALAR_NAME: "$" (<IDENTIFIER> | "!" | "@" | "^O" | "?") >
+|
+    < ARRAY_NAME: "@" (<IDENTIFIER> | "_") >
+|
+    < HASH_NAME: "%" <IDENTIFIER> >
+|
+    < #ONE_LETTER:
+            [
+                 "0"-"9",
+                 "A"-"Z",
+                 "_",
+                 "a"-"r",
+                 "t"-"z",
+                 "-"
+            ]
+    >
+|
+    < #LETTER:
+            [
+                 "0"-"9",
+                 "A"-"Z",
+                 "_",
+                 "a"-"z",
+                 "-"
+            ]
+    >
+|
+    < #PART_LETTER:
+            [
+                 "0"-"9",
+                 "A"-"Z",
+                 "_",
+                 "a"-"z"
+            ]
+    >
+}
+
+/* SEPARATORS */
+
+TOKEN :
+{
+    < LPAREN: "(" >
+| < RPAREN: ")" >
+| < LBRACE: "{" >
+| < RBRACE: "}" >
+| < LBRACKET: "[" >
+| < RBRACKET: "]" >
+| < SEMICOLON: ";" >
+| < COMMA: "," >
+}
+
+/* OPERATORS */
+
+TOKEN :
+{
+    < ASSIGN: "=" >//
+| < GT: ">" >//
+| < LT: "<" >//
+| < CMP: "<=>" >//
+| < BANG: "!" >//
+| < TILDE: "~" >//
+| < HOOK: "?" >//
+| < COLON: ":" >//
+| < EQ: "==" >//
+| < LE: "<=" >//
+| < GE: ">=" >//
+| < NE: "!=" >//
+| < SC_OR: "||" >//
+| < SC_AND: "&&" >//
+| < INCR: "++" >//
+| < DECR: "--" >//
+| < PLUS: "+" >//
+| < MINUS: "-" >//
+| < STAR: "*" >//
+| < POWER: "**" >//
+| < BIT_AND: "&" >//
+| < BIT_OR: "|" >//
+| < XOR: "^" >//
+| < REM: "%" >//
+| < LSHIFT: "<<" >//
+| < RSIGNEDSHIFT: ">>" >//
+| < RUNSIGNEDSHIFT: ">>>" >
+| < PLUSASSIGN: "+=" >//
+| < MINUSASSIGN: "-=" >//
+| < STARASSIGN: "*=" >//
+| < SLASHASSIGN: "/=" >//
+| < ANDASSIGN: "&=" >//
+| < ORASSIGN: "|=" >//
+| < XORASSIGN: "^=" >//
+| < NOTASSIGN: "~=" >//
+| < REMASSIGN: "%=" >//
+| < POWASSIGN: "**=" >//
+| < CONCATASSIGN: ".=" >//
+| < REPEATASSIGN: "x=" >//
+| < LSHIFTASSIGN: "<<=" >//
+| < RSIGNEDSHIFTASSIGN: ">>=" >//
+| < CONCAT: "." >//
+| < DOUBLE_ARROW: "=>" >
+| < REPEAT: "x" >//
+| < TEMPLATE_CMP: "=~" >//
+| < TEMPLATE_NOT_CMP: "!~" >//
+| < SCALAR: "$" >//
+| < ARRAY: "@" >//
+| < REFERENCE: "\\" >//
+}
+
+TOKEN :
+{
+    < PATH: "#!" (~["\n", "\r"])+ >
+}
+
+
+/*****************************************
+ * THE LANGUAGE GRAMMAR STARTS HERE *
+ *****************************************/
+
+/*
+ * Program structuring syntax follows.
+ */
+
+void CompilationUnit() :
+{}
+{
+    [<POD>]
+    [CmdDeclaration()]
+    (<POD> | Statement())*
+    <EOF>
+}
+
+void CmdDeclaration() :
+{}
+{
+    <PATH>
+}
+
+void Expression() :
+/*
+ * This expansion has been written this way instead of:
+ *     Assignment() | ConditionalExpression()
+ * for performance reasons.
+ * However, it is a weakening of the grammar for it allows the LHS of
+ * assignments to be any conditional expression whereas it can only be
+ * a primary expression.    Consider adding a semantic predicate to work
+ * around this.
+ */
+{}
+{
+    ConditionalExpression()
+    [
+        AssignmentOperator() Expression()
+    ]
+}
+
+void AssignmentOperator() :
+{}
+{
+    "=" | "*=" | "/=" | "%=" | "+=" | "-=" | "<<=" | ">>=" | "&=" | "^=" | "|=" |
+    "**=" | "=~" | ".=" | "x="
+}
+
+void ConditionalExpression() :
+{}
+{
+    ConditionalOrExpression() [ "?" Expression() ":" ConditionalExpression() ]
+}
+
+void ConditionalOrExpression() :
+{}
+{
+    ConditionalAndExpression() ( ("||" | "or") ConditionalAndExpression() )*
+}
+
+void ConditionalAndExpression() :
+{}
+{
+    InclusiveOrExpression() ( ("&&" | "and") InclusiveOrExpression() )*
+}
+
+void InclusiveOrExpression() :
+{}
+{
+    ExclusiveOrExpression() ( "|" ExclusiveOrExpression() )*
+}
+
+void ExclusiveOrExpression() :
+{}
+{
+    AndExpression() ( "^" AndExpression() )*
+}
+
+void AndExpression() :
+{}
+{
+    EqualityExpression() ( "&" EqualityExpression() )*
+}
+
+void EqualityExpression() :
+{}
+{
+    MatchExpression() ( ( "==" | "!=" | <SEQ> | <SNE> ) MatchExpression() )*
+}
+
+void MatchExpression() :
+{}
+{
+    RelationalExpression() ( "!~"  RelationalExpression() )* {numStringOperators++;}
+}
+
+void RelationalExpression() :
+{}
+{
+    StringRelationalExpression() ( ( "<" | ">" | "<=" | ">=" ) StringRelationalExpression() )*  {numNumericOperators++;}
+}
+
+void StringRelationalExpression() :
+{}
+{
+    ShiftExpression() ( ( "lt" | "gt" | "le" | "ge" ) ShiftExpression() )* {numStringOperators++;}
+}
+
+void ShiftExpression() :
+{}
+{
+    AdditiveExpression() ( ( "<<" | ">>" ) AdditiveExpression() )*
+}
+
+void AdditiveExpression() :
+{}
+{
+    MultiplicativeExpression() ( ( "+" | "-" | <CONCAT> | <DOUBLE_ARROW> ) MultiplicativeExpression() )*
+}
+
+void MultiplicativeExpression() :
+{}
+{
+    UnaryExpression() ( ( "*" | "/" | "%" | "**" ) UnaryExpression() )*
+}
+
+void UnaryExpression() :
+{}
+{
+    ( "+" | "-" ) UnaryExpression()
+|
+    PreIncrementExpression()
+|
+    PreDecrementExpression()
+|
+    UnaryExpressionNotPlusMinus()
+}
+
+void PreIncrementExpression() :
+{}
+{
+    "++" PrimaryExpression()
+}
+
+void PreDecrementExpression() :
+{}
+{
+    "--" PrimaryExpression()
+}
+
+void UnaryExpressionNotPlusMinus() :
+{}
+{
+    ( "~" | "!" ) UnaryExpression()
+|
+    PostfixExpression()
+}
+
+void PostfixExpression() :
+{}
+{
+    PrimaryExpression() [ LOOKAHEAD(2) "++" | "--" ]
+}
+
+void PrimaryExpression() :
+{}
+{
+    PrimaryExpression2()// | ("{" "}") | ("(" ")") |
+      //("{" PrimaryExpression() "}") | ("(" PrimaryExpression() ")")
+}
+
+void PrimaryExpression2() :
+{}
+{
+    PrimaryPrefix() ( LOOKAHEAD(2) PrimarySuffix() )*
+    [SimpleForeachStatement() | SimpleIfStatement() | SimpleUnlessStatement()
+     | SimpleUntilStatement() | SimpleWhileStatement() ]
+}
+
+void Object () :
+{}
+{
+    [<REFERENCE>]
+    (
+        <SCALAR_NAME> {numScalars++;}
+    |
+        <ARRAY_NAME> {numArrays++;}
+    |
+        <HASH_NAME> {numHashes++;}
+    )
+}
+
+void PrimaryPrefix() :
+{}
+{
+    Literal()
+|
+    LOOKAHEAD(4)
+    InvokeSub()
+|
+    LOOKAHEAD(2)
+    "(" Expression() ")"
+|
+    "(" ")"
+|
+    Object()
+|
+    <IDENTIFIER> ["::" <IDENTIFIER>]
+}
+
+void PrimarySuffix() :
+{}
+{
+    LOOKAHEAD(2)
+    "[" Expression() "]" {arrayGets++;}
+|
+    "{" Expression() "}" {hashGets++;}
+}
+
+void Literal() :
+{}
+{
+    <INTEGER_LITERAL>
+|
+    <FLOATING_POINT_LITERAL>
+|
+    <STRING_LITERAL>
+|
+    <REGEX_LITERAL> {regexes++;}
+|
+    <CMD_LITERAL>
+}
+
+void InvokeSub() :
+{}
+{
+    <IDENTIFIER> Arguments()
+}
+
+void Arguments() :
+{}
+{
+    LOOKAHEAD(3)
+    ("(" [ ArgumentList() ] ")") |
+    ArgumentList()
+}
+
+void ArgumentList() :
+{}
+{
+    (Expression() | LocalVariableDeclaration()) ( "," (Expression() | LocalVariableDeclaration()) )*
+}
+
+
+/*
+ * Statement syntax follows.
+ */
+
+void Statement() :
+{}
+{
+    LOOKAHEAD(2)
+    LabeledStatement()
+|
+    LOOKAHEAD(4)
+    Block()
+|
+    LocalVariableDeclaration()
+|
+    <BEGIN_> Block()
+|
+    EmptyStatement()
+|
+    LOOKAHEAD(3)
+    StatementExpression() ";" {linesOfCode++;}
+|
+    InvokeSub()
+|
+    SwitchStatement()
+|
+    IfStatement()
+|
+    UnlessStatement()
+|
+    WhileStatement()
+|
+    UntilStatement()
+|
+    LOOKAHEAD(2)
+    ForStatement()
+|
+    ForeachStatement()
+|
+    LocalSub()
+|
+    Eval()
+|
+    Sub()
+|
+    ReturnStatement()
+}
+
+void LabeledStatement() :
+{}
+{
+    <IDENTIFIER> ":" Statement()
+}
+
+void Block() :
+{}
+{
+    "{" ( BlockStatement() )* "}" {linesOfCode++;}
+}
+
+void BlockStatement() :
+{}
+{
+    LOOKAHEAD(3)
+    LocalVariableDeclaration() ";" {linesOfCode++;}
+|
+    Statement()
+}
+
+void VariableDeclarator() :
+{}
+{
+    Object() [AssignmentOperator() Expression()]
+}
+
+void LocalVariableDeclaration() :
+{}
+{
+    <MY> VariableDeclarator() ( "," VariableDeclarator() )*
+}
+
+void EmptyStatement() :
+{}
+{
+    ";" {linesOfCode++;}
+}
+
+void StatementExpression() :
+/*
+ * The last expansion of this production accepts more than the legal
+ * Java expansions for StatementExpression.    This expansion does not
+ * use PostfixExpression for performance reasons.
+ */
+{}
+{
+    PreIncrementExpression()
+|
+    PreDecrementExpression()
+|
+    PrimaryExpression()
+    [
+    LOOKAHEAD(2)
+        "++"
+    |
+        "--"
+    |
+        AssignmentOperator() Expression()
+    ]
+}
+
+void SwitchStatement() :
+{}
+{
+    <GIVEN> "(" Expression() ")" "{"
+        ( SwitchLabel() Block() )* {numBranches++;}
+    "}"
+}
+
+void SwitchLabel() :
+{}
+{
+    <WHEN> Expression()
+|
+    <DEFAULT_>
+}
+
+void SimpleIfStatement() :
+{}
+{
+    "if" Expression()
+}
+
+void IfStatement() :
+/*
+ * The disambiguating algorithm of JavaCC automatically binds dangling
+ * else's to the innermost if statement.    The LOOKAHEAD specification
+ * is to tell JavaCC that we know what we are doing.
+ */
+{}
+{
+    <IF> "(" Expression() ")" Block()
+    ( LOOKAHEAD(1) <ELSIF> "(" Expression() ")" Block() )*
+    [ LOOKAHEAD(1) <ELSE> Block() ] {numBranches++;}
+}
+
+void SimpleUnlessStatement() :
+{}
+{
+    "unless" Expression()
+}
+
+void UnlessStatement() :
+/*
+ * The disambiguating algorithm of JavaCC automatically binds dangling
+ * else's to the innermost if statement.    The LOOKAHEAD specification
+ * is to tell JavaCC that we know what we are doing.
+ */
+{}
+{
+        <UNLESS> "(" Expression() ")" Block()
+        [ LOOKAHEAD(1) <ELSIF> "(" Expression() ")" Block() ]
+        [ LOOKAHEAD(1) <ELSE> Block() ] {numBranches++;}
+}
+
+void SimpleWhileStatement() :
+{}
+{
+    "while" Expression()
+}
+
+void WhileStatement() :
+{}
+{
+        <WHILE> "(" Expression() ")" Block()
+        [ <CONTINUE> Block() ]  {numCycles++;}
+}
+
+void SimpleUntilStatement() :
+{}
+{
+    "until" Expression()
+}
+
+void UntilStatement() :
+{}
+{
+        <UNTIL> "(" Expression() ")" Block()
+        [ <CONTINUE> Block() ] {numCycles++;}
+}
+
+void ForStatement() :
+{}
+{
+    <FOR> "(" [ ForInit() ] ";" [ Expression() ] ";" [ ForUpdate() ] ")" Block() {numCycles++;}
+}
+
+void SimpleForeachStatement() :
+{}
+{
+    "foreach" Expression()
+}
+
+void ForeachStatement() :
+{}
+{
+    ((<FOREACH> | <FOR>) Object() "(" Expression() ")" Block()) {numCycles++;}
+}
+
+void ForInit() :
+{}
+{
+    LocalVariableDeclaration()
+|
+    StatementExpressionList()
+}
+
+void StatementExpressionList() :
+{}
+{
+    StatementExpression() ( "," StatementExpression() )*
+}
+
+void ForUpdate() :
+{}
+{
+    StatementExpressionList()
+}
+
+void Sub() :
+{}
+{
+    <SUB> [ <IDENTIFIER> ] Block() {functions++;}
+}
+
+void LocalSub() :
+{}
+{
+    "local" Expression() "=" <SUB> Block() {functions++;}
+}
+
+void Eval() :
+{}
+{
+    "eval" Block()
+}
+
+void ReturnStatement() :
+{}
+{
+    <RETURN> [ Expression() ] ";" {linesOfCode++;}
+}

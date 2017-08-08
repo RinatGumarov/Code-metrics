@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="PerlParser">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/out/artifacts/PerlParser_jar/PerlParser.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

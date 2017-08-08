@@ -1,0 +1,9 @@
+First column has date and time when list of metrics was appended to report file.
+Metric 1. Number of methods
+Metric 2. Number of statements
+Metric 3. Number of classes
+Metric 4. Number of attributes
+Metric 5. Number of loops
+Metric 6. Number of conditions
+Metric 7. Reuse ratio
+Metric 8. Number of children

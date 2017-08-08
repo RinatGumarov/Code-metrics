@@ -1,0 +1,589 @@
+options
+{
+     LOOKAHEAD=30;
+     STATIC=false;
+}
+
+PARSER_BEGIN(Parser)
+
+package main.parser;
+
+public class Parser {
+
+    static int valDeclCount;
+    static int varDeclCount;
+    static int funcDeclCount;
+    static int funcDefCount;
+    static int classDefCount;
+
+    public static main.metrics.Metrics parse(String path) throws ParseException {
+
+        valDeclCount = 0;
+        varDeclCount = 0;
+        funcDeclCount = 0;
+        funcDefCount = 0;
+        classDefCount = 0;
+
+        if (path.length() != 0){
+            System.out.println("===============================================================");
+            System.out.println("Parser: Reading from file " + path + " . . .");
+            try {
+                Parser parser = new Parser(new java.io.FileInputStream(path));
+                parser.CompilationUnit();
+            } catch (java.io.FileNotFoundException e) {
+                System.out.println("Parser: File " + path + " not found.");
+            }
+        } else {
+          System.out.println("Parser: Specify an input file . . .");
+        }
+
+        main.metrics.Metrics metrics = new main.metrics.Metrics();
+        metrics.setValDeclCount(valDeclCount);
+        metrics.setVarDeclCount(varDeclCount);
+        metrics.setFuncDeclCount(funcDeclCount);
+        metrics.setFuncDefCount(funcDefCount);
+        metrics.setClassDefCount(classDefCount);
+
+        System.out.println("Val declarations: " + valDeclCount);
+        System.out.println("Var declarations: " + varDeclCount);
+        System.out.println("Total variables: " + (valDeclCount + varDeclCount));
+        System.out.println("Function declarations only: " + funcDeclCount);
+        System.out.println("Function declarations with definitions: " + funcDefCount);
+        System.out.println("Total functions: " + (funcDeclCount + funcDefCount));
+        System.out.println("Class definitions: " + classDefCount);
+
+        return metrics;
+    }
+}
+
+PARSER_END(Parser)
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+}
+
+TOKEN :
+{
+    <LCURBRACE: "{">
+    | <RCURBRACE: "}">
+    | <LBRACE: "(">
+    | <RBRACE: ")">
+
+    | <LETTER: ["a" - "z", "A" - "Z"]>
+    | <DIGIT: ["0" - "9"]>
+    | <NONZERODIGIT: ["1" - "9"]>
+}
+
+TOKEN :
+{
+  <DEF: "def">
+  | <VAL: "val">
+  | <VAR: "var">
+  | <TYPE: "type">
+  | <THIS: "this">
+  | <IMPLICIT: "implicit">
+  | <LAZY: "lazy">
+  | <IF: "if">
+  | <WHILE: "while">
+  | <DO: "do">
+  | <THROW: "throw">
+  | <RETURN: "return">
+  | <SUPER: "super">
+  | <IMPORT: "import">
+  | <ABSTRACT: "abstract">
+  | <FINAL: "final">
+  | <SEALED: "sealed">
+  | <PRIVATE: "private">
+  | <PROTECTED: "protected">
+  | <OVERRIDE: "override">
+  | <CASE: "case">
+  | <CLASS: "class">
+  | <OBJECT: "object">
+  | <TRAIT: "trait">
+  | <EXTENDS: "extends">
+  | <WITH: "with">
+  | <NEW: "new">
+  | <EQUALS_SIGN: "=">
+}
+
+/** Root production. */
+void CompilationUnit() :{}
+{
+    Functions() <EOF> //hardcode
+}
+
+void id() : {}
+{
+    <LETTER> (<LETTER> | <DIGIT>)*
+}
+
+void ids() : {}
+{
+    id() ("," id())*
+}
+
+void Type() : {}
+{
+    id() //hardcode
+}
+
+void Types() : {}
+{
+    Type() ("," Type())*
+}
+
+void TypeArgs() : {}
+{
+    "[" Types() "]"
+}
+
+void SimpleType() : {}
+{
+    //(SimpleType() (TypeArgs()) | ("#" id())) left recursion
+    //| StableId()
+    StableId()
+    | ((StableId() | [id() "."] <THIS>) "." <TYPE>)
+    | (<LBRACE> Types() <RBRACE>)
+}
+
+void Annotation() : {}
+{
+    "@" id() //hardcode
+}
+
+void Varid() : {}
+{
+    id() //hardcode
+}
+
+void Expr() : {}
+{
+    ((Bindings() | [<IMPLICIT>] id() | "_") "=>" Expr())
+     | Expr1()
+     //| id() //hardcode
+}
+
+void Bindings() : {}
+{
+    <LBRACE> Binding() ("," Binding() )* <RBRACE>
+}
+
+void Binding() : {}
+{
+    (id() | "_") [":" Type()]
+}
+
+void Expr1() : {}
+{
+    <IF> <LBRACE> Expr() <RBRACE> Expr() [[";"] "else" Expr()]
+    | <WHILE> <LBRACE> Expr() <RBRACE> Expr()
+    //|  ‘try’ (‘{’ Block ‘}’ | Expr) [‘catch’ ‘{’ CaseClauses ‘}’] [‘finally’ Expr]
+    | <DO> Expr() [";"] <WHILE> <LBRACE> Expr() <RBRACE>
+    //|  ‘for’ (‘(’ Enumerators ‘)’ | ‘{’ Enumerators ‘}’) {nl} [‘yield’] Expr
+    | <THROW> Expr()
+    | <RETURN> [Expr()]
+    | [SimpleExpr() "."] id() <EQUALS_SIGN> Expr()
+    //|  SimpleExpr1 ArgumentExprs ‘=’ Expr
+    //|  PostfixExpr
+    //|  PostfixExpr Ascription
+    //|  PostfixExpr ‘match’ ‘{’ CaseClauses ‘}’
+    | id() //hardcode
+}
+
+void SimpleExpr() : {}
+{
+    <NEW> (ClassTemplate() | TemplateBody())
+    //| BlockExpr
+    | SimpleExpr1() ["_"]
+}
+
+void SimpleExpr1() : {}
+{
+    //literal
+    //| StableId()
+    StableId()
+    | ([id() "."] <THIS>)
+    | "_"
+  //| '(' exprs? ')'
+    //| ('new' (classTemplate | templateBody) | blockExpr ) '.' Id
+    //| ('new' (classTemplate | templateBody) | blockExpr ) typeArgs
+    //| SimpleExpr1() ArgumentExprs() left recursion
+}
+
+void Block() : {}
+{
+    BlockStat() ([";"] BlockStat())* [ResultExpr()]
+}
+
+void ResultExpr() : {}
+{
+    Expr1()
+//    |  ((Bindings() | ([<IMPLICIT>] id() | "_") ":" CompoundType) "=>" Block)
+}
+
+void BlockStat() : {}
+{
+    Import()
+    | (Annotation())* [<IMPLICIT> | <LAZY>] Def()
+    | (Annotation())* (LocalModifier())* TmplDef()
+    | Expr1()
+    //|
+}
+
+void LocalModifier() : {}
+{
+    <ABSTRACT>
+    | <FINAL>
+    | <SEALED>
+    | <IMPLICIT>
+    | <LAZY>
+}
+
+void Modifier() : {}
+{
+    LocalModifier()
+    | AccessModifier()
+    | <OVERRIDE>
+}
+
+void TmplDef() : {}
+{
+    [<CASE>] <CLASS> ClassDef()
+   // | [<CASE>] <OBJECT> ObjectDef
+   // | <TRAIT> TraitDef
+}
+
+void ClassDef() : {}
+{
+    id() [TypeParamClause()] (ConstrAnnotation())* [AccessModifier()] ClassParamClauses() ClassTemplateOpt()
+    {classDefCount++;}
+}
+
+void ConstrAnnotation() : {}
+{
+    //"@" SimpleType() ArgumentExprs
+    id() //hardcode
+}
+
+void ClassParamClauses() : {}
+{
+    (ClassParamClause())* [<LBRACE> <IMPLICIT> ClassParams() <RBRACE>]
+}
+
+void ClassParamClause() : {}
+{
+    <LBRACE> [ClassParams()] <RBRACE>
+}
+
+void ClassParams() : {}
+{
+    ClassParam() ("," ClassParam())*
+}
+
+void ClassParam() : {}
+{
+    (Annotation())* (Modifier())* [(<VAL> | <VAR>)]
+    id() ":" ParamType() [<EQUALS_SIGN> Expr()]
+}
+
+void AccessModifier() : {}
+{
+    (<PRIVATE> | <PROTECTED>) [AccessQualifier()]
+}
+
+void AccessQualifier() : {}
+{
+    "[" (id() | <THIS>) "]"
+}
+
+
+void ClassTemplateOpt() : {}
+{
+    <EXTENDS> ClassTemplate() | [[<EXTENDS>] TemplateBody()]
+}
+
+void TemplateBody() : {}
+{
+    <LCURBRACE> [SelfType()] [TemplateStat()] ([";"] TemplateStat())* <RCURBRACE>
+    //<LCURBRACE> [SelfType()] TemplateStat() ([";"] TemplateStat())* <RCURBRACE>
+}
+
+void SelfType() : {}
+{
+    (id() [":" Type()] "=>")
+    | (<THIS> ":" Type() "=>")
+}
+
+void TemplateStat() : {}
+{
+    Import()
+    | ((Annotation())* (Modifier())* (Def() | Dcl()))
+    | Expr()
+    //|
+}
+
+//CLASS TEMPLATE
+
+void ClassTemplate() : {}
+{
+    [EarlyDefs()] ClassParents() [TemplateBody()]
+}
+
+void EarlyDefs() : {}
+{
+    <LCURBRACE> [EarlyDef() (";" EarlyDef())*] <RCURBRACE> <WITH>
+}
+
+void EarlyDef() : {}
+{
+    (Annotation())* (Modifier())* PatVarDef()
+}
+
+void ClassParents() : {}
+{
+    Constr() (<WITH> AnnotType())*
+}
+
+void Constr() : {}
+{
+    AnnotType() (ArgumentExprs())*
+}
+
+void AnnotType() : {}
+{
+    id() //hardcode
+}
+
+void ArgumentExprs() : {}
+{
+    id() //hardcode
+}
+
+
+void Import() : {}
+{
+    <IMPORT> ImportExpr() ("," ImportExpr())*
+}
+
+void ImportExpr() : {}
+{
+    StableId() "." (id() | "_" | ImportSelectors())
+}
+
+void ImportSelectors() : {}
+{
+    <LCURBRACE> (ImportSelector() ",")* (ImportSelector() | "_") <RCURBRACE>
+}
+
+void ImportSelector() : {}
+{
+    id() ["=>" id() | "=>" "_"]
+}
+
+
+void Functions() : {}
+{
+    (<DEF> FunDef() | Dcl() | TmplDef())* //hardcode, Functions() can be deleted
+}
+
+void Def() : {}
+{
+    PatVarDef()
+    | <DEF> FunDef()
+    | <TYPE> TypeDef()
+    | TmplDef()
+}
+
+void PatVarDef() : {}
+{
+    (<VAL> PatDef())
+    | (<VAR> VarDef())
+}
+
+void PatDef() : {}
+{
+    Pattern2() ("," Pattern2())* (":" Type())* <EQUALS_SIGN> Expr()
+}
+
+void VarDef() : {}
+{
+    PatDef()
+    | (ids() ":" Type() <EQUALS_SIGN> "_")
+}
+
+
+
+void Patterns() : {}
+{
+    (Pattern() ["," Patterns()])
+    | ("_" "*")
+}
+
+void Pattern() : {}
+{
+    Pattern1() ( "|" Pattern1() )*
+}
+
+void Pattern1() : {}
+{
+    Varid() ":" TypePat()
+    | "_" ":" TypePat()
+    | Pattern2()
+}
+
+void TypePat() : {}
+{
+    Type()
+}
+
+void Pattern2() : {}
+{
+    (Varid() ["@" Pattern3()])
+    | Pattern3()
+}
+
+void Pattern3() : {}
+{
+    SimplePattern()
+    | SimplePattern() ( id() SimplePattern() )*
+}
+
+void SimplePattern() : {}
+{
+    "_"
+    | Varid()
+    //| Literal
+    | StableId()
+    | StableId() <LBRACE> [Patterns()] <RBRACE>
+    | StableId() <LBRACE> [Patterns() ","] [Varid() "@"] "_" "*" <RBRACE>
+    | <LBRACE> [Patterns()] <RBRACE>
+}
+
+void StableId() : {}
+{
+    ((id() | ([id() "."] <THIS>)) "." id())
+    | ([id() "."] <SUPER> [ClassQualifier()] "." id())
+}
+
+void ClassQualifier() : {}
+{
+    "[" id() "]"
+}
+
+
+
+//DECLARATION
+
+void Dcl() : {}
+{
+    <VAL> ValDcl()
+    | <VAR> VarDcl()
+    | <DEF> FunDcl()
+    | <TYPE> TypeDcl()
+}
+
+
+void ValDcl() : {}
+{
+    (ValId() ("," ValId())*) ":" Type()
+
+}
+
+void VarDcl() : {}
+{
+    (VarId() ("," VarId())*) ":" Type()
+}
+
+void ValId() : {}
+{
+    id()
+    {valDeclCount++;}
+}
+
+void VarId() : {}
+{
+    id()
+    {varDeclCount++;}
+}
+
+void TypeDcl() : {}
+{
+    id() [TypeParamClause()] [">:" Type()] ["<:" Type()]
+}
+
+void TypeDef() : {}
+{
+    id() [TypeParamClause()] <EQUALS_SIGN> Type()
+}
+
+void FunDcl() : {}
+{
+    FunSig() [":" Type()]
+    {funcDeclCount++;}
+}
+
+void FunSig() : {}
+{
+    id() [FunTypeParamClause()] ParamClauses()
+}
+
+void FunTypeParamClause() : {}
+{
+    "[" TypeParam() ("," TypeParam())* "]"
+}
+
+void TypeParam() : {}
+{
+    (id() | "_") [TypeParamClause()] [">:" Type()] ["<:" Type()]
+    ("<%" Type())* (":" Type())*
+}
+
+void TypeParamClause() : {}
+{
+    "[" VariantTypeParam() ("," VariantTypeParam())* "]"
+}
+
+void VariantTypeParam() : {}
+{
+    (Annotation())* ["+" | "-"] TypeParam()
+}
+
+void ParamClauses() : {}
+{
+    (ParamClause())* ["(" "implicit" Params() ")"]
+}
+
+void ParamClause() : {}
+{
+    "(" [Params()] ")"
+}
+
+void Params() : {}
+{
+    Param() ("," Param())*
+}
+
+void Param() : {}
+{
+    (Annotation())* id() [":" ParamType()] [<EQUALS_SIGN> Expr()]
+}
+
+void ParamType() : {}
+{
+    Type()
+    | "=>" Type()
+    | Type() "*"
+}
+
+void FunDef() : {}
+{
+    (FunSig() ( ([":" Type()] <EQUALS_SIGN> Expr()) | (<LCURBRACE> [Block()] <RCURBRACE>) ))
+    //| (<THIS> ParamClause() ParamClauses() (<EQUALS_SIGN> constrExpr | constrBlock))
+
+    {funcDefCount++;}
+}
+

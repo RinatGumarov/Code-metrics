@@ -1,0 +1,7 @@
+PHP >= 5.0
+* optional gettext for CAPTCHAs
+
+APACHE >=2.0.x
+* +mod_rewrite
+
+MYSQL >=4.1.11

@@ -1,0 +1,3265 @@
+options
+{
+
+     LOOKAHEAD=30;
+     DEBUG_PARSER = true;
+     STATIC=false;
+
+}
+
+PARSER_BEGIN(JavaSwift)
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+
+public class JavaSwift
+{
+    public static void parse(String path) throws FileNotFoundException, ParseException
+    {
+        JavaSwift parser = new JavaSwift(new FileInputStream(path));
+        parser.TopLevelDeclaration();
+    }
+}
+
+PARSER_END(JavaSwift)
+
+SKIP:
+{
+    " "
+  | "\t"
+  | "\n"
+  | "\r"
+  | <"//" (~["\n","\r"])* ("\n"|"\r")>
+}
+
+TOKEN:
+{
+
+    < UPPER_LETTER: ["A"-"Z"] >
+    | < LOWER_LETTER: ["a"-"z"] >
+    | < UNDERSCORE: "_" >
+    /*| < EXTENDED_UNICODE: [ "\u0041"-"\u005a", "\u0061"-"\u007a", "\u00aa"-"\u00aa", "\u00b5"-"\u00b5", "\u00ba"-"\u00ba",
+                             "\u00c0"-"\u00d6", "\u00d8"-"\u00f6", "\u00f8"-"\u0236", "\u0250"-"\u02c1", "\u02c6"-"\u02d1",
+                              "\u02e0"-"\u02e4", "\u02ee"-"\u02ee", "\u037a"-"\u037a", "\u0386"-"\u0386", "\u0388"-"\u038a",
+                              "\u038c"-"\u038c", "\u038e"-"\u03a1", "\u03a3"-"\u03ce", "\u03d0"-"\u03f5", "\u03f7"-"\u03fb",
+                              "\u0400"-"\u0481", "\u048a"-"\u04ce", "\u04d0"-"\u04f5", "\u04f8"-"\u04f9", "\u0500"-"\u050f",
+                              "\u0531"-"\u0556", "\u0559"-"\u0559", "\u0561"-"\u0587", "\u05d0"-"\u05ea", "\u05f0"-"\u05f2",
+                              "\u0621"-"\u063a", "\u0640"-"\u064a", "\u066e"-"\u066f", "\u0671"-"\u06d3", "\u06d5"-"\u06d5",
+                              "\u06e5"-"\u06e6", "\u06ee"-"\u06ef", "\u06fa"-"\u06fc", "\u06ff"-"\u06ff", "\u0710"-"\u0710",
+                              "\u0712"-"\u072f", "\u074d"-"\u074f", "\u0780"-"\u07a5", "\u07b1"-"\u07b1", "\u0904"-"\u0939",
+                              "\u093d"-"\u093d", "\u0950"-"\u0950", "\u0958"-"\u0961", "\u0985"-"\u098c", "\u098f"-"\u0990",
+                              "\u0993"-"\u09a8", "\u09aa"-"\u09b0", "\u09b2"-"\u09b2", "\u09b6"-"\u09b9", "\u09bd"-"\u09bd",
+                              "\u09dc"-"\u09dd", "\u09df"-"\u09e1", "\u09f0"-"\u09f1", "\u0a05"-"\u0a0a", "\u0a0f"-"\u0a10",
+                              "\u0a13"-"\u0a28", "\u0a2a"-"\u0a30", "\u0a32"-"\u0a33", "\u0a35"-"\u0a36", "\u0a38"-"\u0a39",
+                              "\u0a59"-"\u0a5c", "\u0a5e"-"\u0a5e", "\u0a72"-"\u0a74", "\u0a85"-"\u0a8d", "\u0a8f"-"\u0a91",
+                              "\u0a93"-"\u0aa8", "\u0aaa"-"\u0ab0", "\u0ab2"-"\u0ab3", "\u0ab5"-"\u0ab9", "\u0abd"-"\u0abd",
+                              "\u0ad0"-"\u0ad0", "\u0ae0"-"\u0ae1", "\u0b05"-"\u0b0c", "\u0b0f"-"\u0b10", "\u0b13"-"\u0b28",
+                              "\u0b2a"-"\u0b30", "\u0b32"-"\u0b33", "\u0b35"-"\u0b39", "\u0b3d"-"\u0b3d", "\u0b5c"-"\u0b5d",
+                              "\u0b5f"-"\u0b61", "\u0b71"-"\u0b71", "\u0b83"-"\u0b83", "\u0b85"-"\u0b8a", "\u0b8e"-"\u0b90",
+                              "\u0b92"-"\u0b95", "\u0b99"-"\u0b9a", "\u0b9c"-"\u0b9c", "\u0b9e"-"\u0b9f", "\u0ba3"-"\u0ba4",
+                              "\u0ba8"-"\u0baa", "\u0bae"-"\u0bb5", "\u0bb7"-"\u0bb9", "\u0c05"-"\u0c0c", "\u0c0e"-"\u0c10",
+                              "\u0c12"-"\u0c28", "\u0c2a"-"\u0c33", "\u0c35"-"\u0c39", "\u0c60"-"\u0c61", "\u0c85"-"\u0c8c",
+                              "\u0c8e"-"\u0c90", "\u0c92"-"\u0ca8", "\u0caa"-"\u0cb3", "\u0cb5"-"\u0cb9", "\u0cbd"-"\u0cbd",
+                              "\u0cde"-"\u0cde", "\u0ce0"-"\u0ce1", "\u0d05"-"\u0d0c", "\u0d0e"-"\u0d10", "\u0d12"-"\u0d28",
+                              "\u0d2a"-"\u0d39", "\u0d60"-"\u0d61", "\u0d85"-"\u0d96", "\u0d9a"-"\u0db1", "\u0db3"-"\u0dbb",
+                              "\u0dbd"-"\u0dbd", "\u0dc0"-"\u0dc6", "\u0e01"-"\u0e30", "\u0e32"-"\u0e33", "\u0e40"-"\u0e46",
+                              "\u0e81"-"\u0e82", "\u0e84"-"\u0e84", "\u0e87"-"\u0e88", "\u0e8a"-"\u0e8a", "\u0e8d"-"\u0e8d",
+                              "\u0e94"-"\u0e97", "\u0e99"-"\u0e9f", "\u0ea1"-"\u0ea3", "\u0ea5"-"\u0ea5", "\u0ea7"-"\u0ea7",
+                              "\u0eaa"-"\u0eab", "\u0ead"-"\u0eb0", "\u0eb2"-"\u0eb3", "\u0ebd"-"\u0ebd", "\u0ec0"-"\u0ec4",
+                              "\u0ec6"-"\u0ec6", "\u0edc"-"\u0edd", "\u0f00"-"\u0f00", "\u0f40"-"\u0f47", "\u0f49"-"\u0f6a",
+                              "\u0f88"-"\u0f8b", "\u1000"-"\u1021", "\u1023"-"\u1027", "\u1029"-"\u102a", "\u1050"-"\u1055",
+                              "\u10a0"-"\u10c5", "\u10d0"-"\u10f8", "\u1100"-"\u1159", "\u115f"-"\u11a2", "\u11a8"-"\u11f9",
+                              "\u1200"-"\u1206", "\u1208"-"\u1246", "\u1248"-"\u1248", "\u124a"-"\u124d", "\u1250"-"\u1256",
+                              "\u1258"-"\u1258", "\u125a"-"\u125d", "\u1260"-"\u1286", "\u1288"-"\u1288", "\u128a"-"\u128d",
+                              "\u1290"-"\u12ae", "\u12b0"-"\u12b0", "\u12b2"-"\u12b5", "\u12b8"-"\u12be", "\u12c0"-"\u12c0",
+                              "\u12c2"-"\u12c5", "\u12c8"-"\u12ce", "\u12d0"-"\u12d6", "\u12d8"-"\u12ee", "\u12f0"-"\u130e",
+                              "\u1310"-"\u1310", "\u1312"-"\u1315", "\u1318"-"\u131e", "\u1320"-"\u1346", "\u1348"-"\u135a",
+                              "\u13a0"-"\u13f4", "\u1401"-"\u166c", "\u166f"-"\u1676", "\u1681"-"\u169a", "\u16a0"-"\u16ea",
+                              "\u1700"-"\u170c", "\u170e"-"\u1711", "\u1720"-"\u1731", "\u1740"-"\u1751", "\u1760"-"\u176c",
+                              "\u176e"-"\u1770", "\u1780"-"\u17b3", "\u17d7"-"\u17d7", "\u17dc"-"\u17dc", "\u1820"-"\u1877",
+                              "\u1880"-"\u18a8", "\u1900"-"\u191c", "\u1950"-"\u196d", "\u1970"-"\u1974", "\u1d00"-"\u1d6b",
+                              "\u1e00"-"\u1e9b", "\u1ea0"-"\u1ef9", "\u1f00"-"\u1f15", "\u1f18"-"\u1f1d", "\u1f20"-"\u1f45",
+                              "\u1f48"-"\u1f4d", "\u1f50"-"\u1f57", "\u1f59"-"\u1f59", "\u1f5b"-"\u1f5b", "\u1f5d"-"\u1f5d",
+                              "\u1f5f"-"\u1f7d", "\u1f80"-"\u1fb4", "\u1fb6"-"\u1fbc", "\u1fbe"-"\u1fbe", "\u1fc2"-"\u1fc4",
+                              "\u1fc6"-"\u1fcc", "\u1fd0"-"\u1fd3", "\u1fd6"-"\u1fdb", "\u1fe0"-"\u1fec", "\u1ff2"-"\u1ff4",
+                              "\u1ff6"-"\u1ffc", "\u2071"-"\u2071", "\u207f"-"\u207f", "\u2102"-"\u2102", "\u2107"-"\u2107",
+                              "\u210a"-"\u2113", "\u2115"-"\u2115", "\u2119"-"\u211d", "\u2124"-"\u2124", "\u2126"-"\u2126",
+                              "\u2128"-"\u2128", "\u212a"-"\u212d", "\u212f"-"\u2131", "\u2133"-"\u2139", "\u213d"-"\u213f",
+                              "\u2145"-"\u2149", "\u3005"-"\u3006", "\u3031"-"\u3035", "\u303b"-"\u303c", "\u3041"-"\u3096",
+                              "\u309d"-"\u309f", "\u30a1"-"\u30fa", "\u30fc"-"\u30ff", "\u3105"-"\u312c", "\u3131"-"\u318e",
+                              "\u31a0"-"\u31b7", "\u31f0"-"\u31ff", "\u3400"-"\u4db5", "\u4e00"-"\u9fa5", "\ua000"-"\ua48c",
+                              "\uac00"-"\ud7a3", "\uf900"-"\ufa2d", "\ufa30"-"\ufa6a", "\ufb00"-"\ufb06", "\ufb13"-"\ufb17",
+                              "\ufb1d"-"\ufb1d", "\ufb1f"-"\ufb28", "\ufb2a"-"\ufb36", "\ufb38"-"\ufb3c", "\ufb3e"-"\ufb3e",
+                              "\ufb40"-"\ufb41", "\ufb43"-"\ufb44", "\ufb46"-"\ufbb1", "\ufbd3"-"\ufd3d", "\ufd50"-"\ufd8f",
+                              "\ufd92"-"\ufdc7", "\ufdf0"-"\ufdfb", "\ufe70"-"\ufe74", "\ufe76"-"\ufefc", "\uff21"-"\uff3a",
+                              "\uff41"-"\uff5a", "\uff66"-"\uffbe", "\uffc2"-"\uffc7", "\uffca"-"\uffcf", "\uffd2"-"\uffd7",
+                              "\uffda"-"\uffdc" ]>
+
+    | < EXTENDED_UNICODE_2: (["\u0300"-"\u036F" , "\u1DC0"-"\u1DFF", "\u20D0"-"\u20FF", "\uFE20"-"\uFE2F"]) >
+    */
+
+    //ToDo: почему на первой строке первый слэш не экранируется, а на второй у \\u экранируется?
+    | < ESCAPE_CHARACTERS: ("\\0") | ("\\\\") | ("\\t") | ("\\n") | ("\\r") | ("\\\"") | ("\\'")
+    | ("\\u") ("[") (["1"-"8"]) ("]") >
+
+//    | < SURROGATE_PAIR_CODE: (["\uD800"-"\uDFFF"]) >
+    //| < UNICODE_SCALAR: (["\u0000"-"\uD7FF"]) >
+
+    /* ================================
+                    Digits
+       ================================ */
+    | < DIGIT: ["0"-"9"] >
+
+    | < BINARY_DIGIT_BEGIN: "0b" >
+    | < BINARY_DIGIT: ["0"-"1"] >
+
+    | < OCTAL_DIGIT_BEGIN: "0o" >
+    | < OCTAL_DIGIT: ["0"-"7"] >
+//    | < DECIMAL_DIGIT: (<DIGIT>)>
+
+    | < HEXADECIMAL_DIGIT_BEGIN: "0x">
+    | < HEXADECIMAL_DIGIT: (["a"-"f"]) | (["A"-"F"]) >
+
+
+    /* ================================
+                    Math
+       ================================ */
+    | < PLUS: "+" >
+    | < MINUS: "-" >
+    | < ASSIGN: "=" >
+    | < E: ("E") | ("e") >
+    | < P: ("P") | ("p") >
+    | <STAR: "*" >
+    | <PERCENT: "%" >
+    | <MORE_OR_EQUALS: ">=" >
+    | <LESS_OR_EQUALS: "<=" >
+    | <EQUALS: "==" >
+
+    /* ================================
+                    Literals
+       ================================ */
+    | < TRUE: "true">
+    | < FALSE: "false">
+    | < NIL: "nil">
+    | < SHARP_FILE: "#file" >
+    | < SHARP_LINE: "#line" >
+    | < COLUMN: "#column" >
+    | < FUNCTION: "#function" >
+    | < COLOR_LITERAL: "#colorLiteral" >
+    | < RED: " red" | "red " | " red ">
+    | < GREEN: "green" >
+    | < BLUE: "blue" >
+    | < ALPHA: "alpha" >
+    | < FILE_LITERAL: "#fileLiteral" >
+    | < IMAGE_LITERAL: "#imageLiteral" >
+    | < RESOURCE_NAME: "resourceName" >
+
+
+    /* ================================
+                    Operators
+       ================================ */
+    | < OPERATOR_HEAD: (["\u00A1"-"\u00A7"])
+    | ("\u00A9") | ("\u00AB")
+    | ("\u00AC ") | ("\u00AE")
+    | (["\u00B0"-"\u00B1"]) | ("\u00B6 ") | ("\u00BB") | ("\u00BF ") | ("\u00D7") | ("\u00F7")
+    | (["\u2016"-"\u2017"]) | (["\u2020"-"\u2027"])
+    | (["\u2030"-"\u203E"])
+    | (["\u2041"-"\u2053"])
+    | (["\u2055"-"\u205E"])
+    | (["\u2190"-"\u23FF"])
+    | (["\u2500"-"\u2775"])
+    | (["\u2794"-"\u2BFF"])
+    | (["\u2E00"-"\u2E7F"])
+    | (["\u3001"-"\u3003"])
+    | (["\u3008"-"\u3030"])
+    | ("^")
+    | ("~") >
+
+
+
+    | < OPERATOR_CHARACTER: (["\u0300"-"\u036F"])
+    | (["\u1DC0"-"\u1DFF"])
+    | (["\u20D0"-"\u20FF"])
+    | (["\uFE00"-"\uFE0F"])
+    | (["\uFE20"-"\uFE2F"]) >
+    //| < OPERATOR_CHARACTER: (["\uE0100"-"\uE01EF"]) >
+
+
+    /* ================================
+                    Types
+       ================================ */
+    | < ANY: "any" >
+    | < ARROW_RIGHT: "->">
+
+
+    /* ================================
+                    Annotation
+       ================================ */
+    | < INOUT: "inout" >
+
+
+    /* ================================
+                    Annotation
+       ================================ */
+    | < THROWS: "throws">
+    | < RETHROWS: "rethrows">
+
+
+    /* ================================
+                    Metatype
+       ================================ */
+    | < CAPITAL_TYPE: "Type" >
+    | < CAPITAL_PROTOCOL: " Protocol" | "Protocol " | " Protocol ">
+
+
+    /* ================================
+                    Type Inheritance
+       ================================ */
+    | < CLASS: "class" >
+
+
+    /* ================================
+                    Try
+       ================================ */
+    | < TRY: "try" >
+
+
+    /* ================================
+                    Type-Casting
+       ================================ */
+    | < AS: " as " >
+    | < IS: " is " >
+
+    /* ================================
+                    Self
+       ================================ */
+    | < SELF: "self" >
+    | < INIT: "init" >
+
+
+    /* ================================
+                    Superclass
+       ================================ */
+    | < SUPER: "super" >
+
+
+    /* ================================
+                    Closure
+       ================================ */
+    | < IN: "in " | " in" | " in " >
+    | < WEAK: "weak" >
+    | < UNOWNED: "unowned" >
+    | < SAFE: "safe" >
+    | < UNSAFE: "unsafe" >
+
+
+    /* ================================
+                    Selector
+       ================================ */
+    | < SELECTOR: "#selector" >
+    | < GETTER: "getter:" >
+    | < SETTER: "setter:" >
+
+
+    /* ================================
+                    Key-Path
+       ================================ */
+    | < KEY_PATH: "#keyPath" >
+
+
+    /* ================================
+                    Dynamic Type
+       ================================ */
+    | < TYPE: "type" >
+    | < OF: "of" >
+
+
+    /* ================================
+                    Dynamic Type
+       ================================ */
+    | < LET: " let " >
+    | < VAR: " var " >
+
+
+    /* ================================
+                    Loops
+       ================================ */
+    | < WHILE: "while" >
+    | < FOR: " for " | "for " >
+    | < CASE: "case" >
+    | < REPEAT: "repeat" >
+    | < BREAK: "break" >
+    | < CONTINUE: "continue" >
+
+
+    /* ================================
+                    Conditions
+       ================================ */
+    | < IF: " if " | "if " | " if" >
+    | < ELSE: "else" >
+    | < SWITCH: "switch" >
+    | < DEFAULT_1: "default" >
+    | < WHERE: "where" >
+
+
+    /* ================================
+                    Guard
+       ================================ */
+    | < GUARD: "guard" >
+
+
+    /* ================================
+                    Fallthrough
+       ================================ */
+    | < FALLTHROUGH: "fallthrough" >
+
+
+    /* ================================
+                    Return
+       ================================ */
+    | < RETURN: "return" >
+
+
+    /* ================================
+                    Throw
+       ================================ */
+    | < THROW: "throw" >
+
+
+    /* ================================
+                    Defer
+       ================================ */
+    | < DEFER: "defer " >
+
+
+    /* ================================
+                    Do
+       ================================ */
+    | < DO: "do" >
+    | < CATCH: "catch" >
+
+
+    /* ================================
+                    Conditional Compilation
+       ================================ */
+    | < SHARP_IF: "#if" >
+    | < SHARP_ELSEIF: "#elseif" >
+    | < SHARP_ELSE: "#else" >
+    | < SHARP_ENDIF: "#endif" >
+    | < OS: "os" >
+    | < ARCH: "arch" >
+    | < SWIFT: "swift" >
+    | < MAC_OS: "macOS" >
+    | < IOS: "iOS" >
+    | < WATCH_OS: "watchOS" >
+    | < TV_OS: "tvOS" >
+    | < I_386: "i386" >
+    | < X_86_64: "x86_64" >
+    | < ARM: "arm" >
+    | < ARM_64: "arm64" >
+
+
+    /* ================================
+                    Line Control
+       ================================ */
+    | < SOURCE_LOCATION: "#sourceLocation" >
+    | < FILE: "file:" >
+    | < LINE: "line:" >
+
+
+    /* ================================
+                    Availability
+       ================================ */
+    | < SHARP_AVAILABLE: "#available" >
+    | < IOS_APP_EXT: "iOSApplicationExtension" >
+    | < MAC_OS_APP_EXT: "macOSApplicationExtension" >
+
+
+    /* ================================
+                    Import
+       ================================ */
+    | < IMPORT: "import" >
+    | < TYPE_ALIAS: "typealias" >
+    | < ENUM: "enum" >
+    | < PROTOCOL: "protocol" >
+    | < FUNC: "func" >
+
+
+    /* ================================
+                    Variable
+       ================================ */
+    | < GET: "get " | " get" | " get " >
+    | < SET: "set " | " set" | " set ">
+    | < WILL_SET: "willSet" >
+    | < DID_SET: "didSet" >
+
+
+    /* ================================
+                    Enumeration
+       ================================ */
+    | < INDIRECT: "indirect" >
+
+
+    /* ================================
+                    Structure
+       ================================ */
+    | < STRUCT: "struct" >
+
+
+    /* ================================
+                    Class
+       ================================ */
+    | < FINAL: "final" >
+
+
+    /* ================================
+                    Associated Type
+       ================================ */
+    | < ASSOCIATED_TYPE: "associatedtype" >
+
+
+    /* ================================
+                    Deinitializer
+       ================================ */
+    | < DEINIT: "deinit" >
+
+
+    /* ================================
+                    Extension
+       ================================ */
+    | < EXTENSION: "extension" >
+
+
+    /* ================================
+                    Subscript
+       ================================ */
+    | < SUBSCRIPT: "subscript" >
+
+
+    /* ================================
+                    Operators
+       ================================ */
+    | < PREFIX: "prefix" >
+    | < POSTFIX: "postfix" >
+    | < OPERATOR: "operator" >
+
+
+    /* ================================
+                    Precedence Group
+       ================================ */
+    | < PRECEDENCE_GROUP: "precedencegroup" >
+    | < HIGHER_THAN: "higherThan" >
+    | < LOWER_THAN: "lowerThan" >
+    | < ASSIGNMENT: "assignment" >
+    | < ASSOCIATIVITY: "associativity" >
+    | < LEFT: "left" >
+    | < RIGHT: "right" >
+    | < NONE: "none" >
+
+
+    /* ================================
+                    Declaration
+       ================================ */
+    | < CONVENIENCE: "convenience" >
+    | < DYNAMIC: "dynamic" >
+    | < INFIX: "infix" >
+    | < LAZY: "lazy" >
+    | < OPTIONAL: "optional" >
+    | < OVERRIDE: "override" >
+    | < REQUIRED: "required" >
+    | < STATIC: "static" >
+    | < PRIVATE: "private" >
+    | < FILEPRIVATE: "fileprivate"  >
+    | < INTERNAL: "internal" >
+    | < PUBLIC: "public" >
+    | < OPEN: "open" >
+    | < MUTATING: "mutating" >
+    | < NON_MUTATING: "nonmutating" >
+
+
+    /* ================================
+                    Punctuation
+       ================================ */
+    | < DOT: "." >
+    | < THREE_DOTS: "...">
+    | < COMMA: "," >
+    | < SEMICOLON: ";" >
+    | < COLON: ":" | " :" | " : ">
+    | < QUESTION_MARK: "?" >
+    | < EXCLAMATION_MARK: "!" >
+    | < SLASH: "/" >
+    | < BACK_SLASH: "\\" >
+    | < DOLLAR: "$" >
+    | < AMPERSAND: "&" >
+    | < DBL_AMPERSAND: "&&" >
+    | < OR: "|" >
+    | < DBL_OR: "||" >
+    | < AT: "@" >
+
+
+    /* ================================
+                    Brackets
+       ================================ */
+    | < OPEN_BRACKET: "{" >
+    | < CLOSED_BRACKET: "}" >
+    | < OPEN_SQUARE_BRACKET: "[" >
+    | < CLOSED_SQUARE_BRACKET: "]" >
+    | < OPEN_DOUBLE_QUOTE: "\"" >
+    | < OPEN_PARENTHESIS: "(" >
+    | < CLOSED_PARENTHESIS: ")" >
+    | < OPEN_QUOTE: "`" >
+    | < OPEN_TRIANGULAR_BRACKET: "<" >
+    | < CLOSED_TRIANGULAR_BRACKET: ">" >
+
+
+
+}
+
+/* =====================================================================================================================
+                        1. Lexical Structure
+   ================================================================================================================== */
+
+/* ===================================================================
+                        1.1. GRAMMAR OF AN IDENTIFIER (CHECKED by Alexey)
+   =================================================================== */
+
+//Проверено
+void Identifier(): {}
+{
+    IdentifierHead() (IdentifierCharacters())? (<DOT> Identifier())*
+    | <OPEN_QUOTE> IdentifierHead() (IdentifierCharacter())? <OPEN_QUOTE>
+    | ImplicitParameterName()
+}
+
+//Проверено, исправлено на строгую
+void IdentifierList(): {}
+{
+    Identifier() (<COMMA> IdentifierList())?
+}
+
+//Проверено
+void IdentifierHead(): {}
+{
+    <UPPER_LETTER>
+    | <LOWER_LETTER>
+    | <UNDERSCORE>
+    // | <EXTENDED_UNICODE>
+}
+
+//Проверено
+void IdentifierCharacter(): {}
+{
+    <DIGIT>
+    | IdentifierHead()
+    // | <EXTENDED_UNICODE_2>
+}
+
+//Проверено
+void IdentifierCharacters(): {}
+{
+    IdentifierCharacter() (IdentifierCharacters())?
+}
+
+//Проверено
+void ImplicitParameterName(): {}
+{
+    <DOLLAR> <DIGIT>
+}
+
+/* ===================================================================
+                        1.2. GRAMMAR OF A LITERAL (CHECKED by Alexey)
+   =================================================================== */
+
+//Проверено
+void Literal(): {}
+{
+    NumericLiteral()
+    | StringLiteral()
+    | BooleanLiteral()
+    | NilLiteral()
+}
+
+//Проверено, исправлено на строгую
+void NumericLiteral(): {}
+{
+    (<MINUS>)? (IntegerLiteral() | FloatingPointLiteral())
+}
+
+//Проверено
+void BooleanLiteral(): {}
+{
+    <TRUE>
+    | <FALSE>
+}
+
+//Проверено
+void NilLiteral(): {}
+{
+    <NIL>
+}
+
+/* ===================================================================
+                        1.3. GRAMMAR OF AN INTEGER LITERAL (CHECKED by Alexey)
+   =================================================================== */
+
+//Проверено
+void IntegerLiteral(): {}
+{
+    BinaryLiteral()
+    | OctalLiteral()
+    | DecimalLiteral()
+    | HexadecimalLiteral()
+}
+
+//Проверено
+void BinaryLiteral(): {}
+{
+    <BINARY_DIGIT_BEGIN> <BINARY_DIGIT> (BinaryLiteralCharacters())?
+}
+
+
+//Проверено
+void BinaryLiteralCharacter(): {}
+{
+    <BINARY_DIGIT>
+    | <UNDERSCORE>
+}
+
+//Проверено
+void BinaryLiteralCharacters(): {}
+{
+    BinaryLiteralCharacter() (BinaryLiteralCharacters())?
+}
+
+//Проверено
+void OctalLiteral(): {}
+{
+    <OCTAL_DIGIT_BEGIN> <OCTAL_DIGIT> (OctalLiteralCharacters())?
+}
+
+//Проверено
+void OctalLiteralCharacter(): {}
+{
+    <OCTAL_DIGIT>
+    | <UNDERSCORE>
+}
+
+//Проверено
+void OctalLiteralCharacters(): {}
+{
+    OctalLiteralCharacter() (OctalLiteralCharacters())?
+}
+
+//Проверено
+void DecimalLiteral(): {}
+{
+    <DIGIT> (DecimalLiteralCharacter())?
+}
+
+//Проверено
+void DecimalDigits(): {}
+{
+    <DIGIT> (DecimalDigits())?
+}
+
+//Проверено
+void DecimalLiteralCharacter(): {}
+{
+    <DIGIT>
+    | <UNDERSCORE>
+}
+
+//Проверено
+void DecimalLiteralCharacters(): {}
+{
+    DecimalLiteralCharacter() (DecimalLiteralCharacters())?
+}
+
+//Проверено
+void HexadecimalLiteral(): {}
+{
+    <HEXADECIMAL_DIGIT_BEGIN> (<HEXADECIMAL_DIGIT> | <DIGIT>) (HexadecimalLiteralCharacters())?
+}
+
+//Проверено
+void HexadecimalLiteralCharacter(): {}
+{
+    ( <HEXADECIMAL_DIGIT> | <DIGIT>)
+    | <UNDERSCORE>
+}
+
+//Проверено
+void HexadecimalLiteralCharacters(): {}
+{
+    HexadecimalLiteralCharacter() (HexadecimalLiteralCharacters())?
+}
+
+/* ===================================================================
+                        1.4. GRAMMAR OF A FLOATING-POINT LITERAL (CHECKED by Alexey)
+   =================================================================== */
+
+//Проверено
+void FloatingPointLiteral(): {}
+{
+    DecimalLiteral() (DecimalFraction())? (DecimalExponent())?
+    | HexadecimalLiteral() (HexadecimalFraction())? HexadecimalExponent()
+}
+
+//Проверено
+void DecimalFraction(): {}
+{
+    <DOT> DecimalLiteral()
+}
+
+//Проверено
+void DecimalExponent(): {}
+{
+    <E> (<PLUS> | <MINUS>)? DecimalLiteral()
+}
+
+//Проверено
+void HexadecimalFraction(): {}
+{
+    <DOT> (<HEXADECIMAL_DIGIT> | <DIGIT>) (HexadecimalLiteralCharacters())?
+}
+
+//Проверено
+void HexadecimalExponent(): {}
+{
+    <P> (<PLUS> | <MINUS>)? DecimalLiteral()
+}
+
+/* ===================================================================
+                        1.5. GRAMMAR OF A STRING LITERAL (CHECKED by Alexey)
+   =================================================================== */
+
+//Проверено
+void StringLiteral(): {}
+{
+    StaticStringLiteral()
+    | InterpolatedStringLiteral()
+}
+
+//Проверено
+void StaticStringLiteral(): {}
+{
+    <OPEN_DOUBLE_QUOTE> (QuotedText())? <OPEN_DOUBLE_QUOTE>
+}
+
+//Проверено
+void QuotedText(): {}
+{
+    QuotedTextItem() (QuotedText())?
+}
+
+
+// TODO: Any Unicode scalar value except ", \, u000A, u000D
+void QuotedTextItem(): {}
+{
+//    <UNICODE_SCALAR>
+    <ESCAPE_CHARACTERS>
+}
+
+//Проверено
+void InterpolatedStringLiteral(): {}
+{
+    <OPEN_DOUBLE_QUOTE> (InterpolatedText())? <OPEN_DOUBLE_QUOTE>
+}
+
+//Проверено
+void InterpolatedText(): {}
+{
+    InterpolatedTextItem() (InterpolatedText())?
+}
+
+//Проверено
+void InterpolatedTextItem(): {}
+{
+    <BACK_SLASH> <OPEN_PARENTHESIS> Expression() <CLOSED_PARENTHESIS>
+    | QuotedTextItem()
+}
+
+/* ===================================================================
+                        1.6. GRAMMAR OF OPERATORS
+   =================================================================== */
+
+void Operator(): {}
+{
+    OperatorHead() (OperatorCharacters())?
+    | <DOT> DotOperatorCharacters()
+}
+
+void OperatorHead(): {}
+{
+    <OPERATOR_HEAD>
+    | <PLUS>
+    | <MINUS>
+    | <ASSIGN>
+    | <SLASH>
+    | <EXCLAMATION_MARK>
+    | <STAR>
+    | <PERCENT>
+    | <OPEN_TRIANGULAR_BRACKET>
+    | <CLOSED_TRIANGULAR_BRACKET>
+    | <AMPERSAND>
+    | <OR>
+    | <AMPERSAND>
+    | <QUESTION_MARK>
+}
+
+void OperatorCharacter(): {}
+{
+    OperatorHead()
+    | <OPERATOR_CHARACTER>
+}
+
+void OperatorCharacters(): {}
+{
+    OperatorCharacter() (OperatorCharacters())?
+}
+
+void DotOperatorCharacter(): {}
+{
+    <DOT>
+    | OperatorCharacter()
+}
+
+void DotOperatorCharacters(): {}
+{
+    DotOperatorCharacter() (DotOperatorCharacters())?
+}
+
+void BinaryOperator(): {}
+{
+    Operator()
+}
+
+void PrefixOperator(): {}
+{
+    Operator()
+}
+
+void PostfixOperator(): {}
+{
+    Operator()
+}
+
+/* =====================================================================================================================
+                        2. Types
+   ================================================================================================================== */
+
+/* ===================================================================
+                        2.1. GRAMMAR OF A TYPE
+   =================================================================== */
+
+// TODO: Не понял, где type → ( type ), но я его добавил
+void Type(): {}
+{
+    (   ArrayType()
+        | DictionaryType()
+        | FunctionType()
+        | TypeIdentifier()
+        | TupleType()
+        | ProtocolCompositionType()
+        | <ANY>
+        | <SELF>
+        | <OPEN_PARENTHESIS> Type() <CLOSED_PARENTHESIS>
+    ) (<EXCLAMATION_MARK> | <QUESTION_MARK>)? (SimpleType())?
+}
+
+void SimpleType(): {}
+{
+    (   OptionalType()
+        | ImplicitlyUnwrappedOptionalType()
+        | MetatypeType()
+    ) (SimpleType())?
+}
+
+/* ===================================================================
+                        2.2. GRAMMAR OF A TYPE ANNOTATION (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void TypeAnnotation(): {}
+{
+    <COLON> (Attributes())? (<INOUT>)? Type()
+}
+
+/* ===================================================================
+                        2.3. GRAMMAR OF A TYPE IDENTIFIER (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО, переписано на строгую
+void TypeIdentifier(): {}
+{
+    TypeName() (GenericArgumentClause())? (<DOT> TypeIdentifier())?
+}
+
+// ПРОВЕРЕНО
+void TypeName(): {}
+{
+    Identifier()
+}
+
+/* ===================================================================
+                        2.4. GRAMMAR OF A TUPLE TYPE (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void TupleType(): {}
+{
+    <OPEN_PARENTHESIS> (TupleTypeElementList())? <CLOSED_PARENTHESIS>
+}
+
+// ПРОВЕРЕНО, исправлено на строгую
+void TupleTypeElementList(): {}
+{
+    TupleTypeElement() (<COMMA> TupleTypeElementList())?
+}
+
+// ПРОВЕРЕНО
+void TupleTypeElement(): {}
+{
+    ElementName() TypeAnnotation()
+    | Type()
+}
+
+// ПРОВЕРЕНО
+void ElementName(): {}
+{
+    Identifier()
+}
+
+/* ===================================================================
+                        2.5. GRAMMAR OF A FUNCTION TYPE (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void FunctionType(): {}
+{
+    (Attributes())? FunctionTypeArgumentClause() (<THROWS>)? <ARROW_RIGHT> Type()
+    | (Attributes())? FunctionTypeArgumentClause() <RETHROWS> <ARROW_RIGHT> Type()
+}
+
+// ПРОВЕРЕНО, исправлена ошибка, исправлено на строгую
+void FunctionTypeArgumentClause(): {}
+{
+    <OPEN_PARENTHESIS> (FunctionTypeArgumentList() (<THREE_DOTS>)?)? <CLOSED_PARENTHESIS>
+}
+
+// ПРОВЕРЕНО, исправлено на строгую
+void FunctionTypeArgumentList(): {}
+{
+    FunctionTypeArgument() (<COMMA> FunctionTypeArgumentList())?
+}
+
+// ПРОВЕРЕНО
+void FunctionTypeArgument(): {}
+{
+    (Attributes())? (<INOUT>)? Type()
+    | ArgumentLabel() TypeAnnotation()
+}
+
+// ПРОВЕРЕНО
+void ArgumentLabel(): {}
+{
+    Identifier()
+}
+
+/* ===================================================================
+                        2.6. GRAMMAR OF AN ARRAY TYPE (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void ArrayType(): {}
+{
+    <OPEN_SQUARE_BRACKET> Type() <CLOSED_SQUARE_BRACKET>
+}
+
+/* ===================================================================
+                        2.7. GRAMMAR OF A DICTIONARY TYPE (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void DictionaryType(): {}
+{
+    <OPEN_SQUARE_BRACKET> Type() <COLON> Type() <CLOSED_SQUARE_BRACKET>
+}
+
+/* ===================================================================
+                        2.8. GRAMMAR OF AN OPTIONAL TYPE (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО, исправлена ошибка
+void OptionalType(): {}
+{
+    Type() <QUESTION_MARK>
+}
+
+/* ===================================================================
+                        2.9. GRAMMAR OF AN IMPLICITLY UNWRAPPED OPTIONAL TYPE (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО, исправлена ошибка
+void ImplicitlyUnwrappedOptionalType(): {}
+{
+    Type() <EXCLAMATION_MARK>
+}
+
+/* ===================================================================
+                        2.10. GRAMMAR OF A PROTOCOL COMPOSITION TYPE (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void ProtocolCompositionType(): {}
+{
+    ProtocolIdentifier() <AMPERSAND> ProtocolCompositionContinuation()
+}
+
+// ПРОВЕРЕНО, исправлена ошибка
+void ProtocolCompositionContinuation(): {}
+{
+    ProtocolIdentifier()
+    | ProtocolCompositionType()
+}
+
+// ПРОВЕРЕНО
+void ProtocolIdentifier(): {}
+{
+    TypeIdentifier()
+}
+
+/* ===================================================================
+                        2.11. GRAMMAR OF A METATYPE TYPE (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО, исправлена ошибка, исправлена на строгую
+void MetatypeType(): {}
+{
+    Type() <DOT> (<TYPE> | <CAPITAL_PROTOCOL>)
+}
+
+/* ===================================================================
+                        2.12. GRAMMAR OF A TYPE INHERITANCE CLAUSE (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void TypeInheritanceClause(): {}
+{
+    <COLON> <CLASS> <COMMA> TypeInheritanceList()
+    | <COLON> <CLASS>
+    | <COLON> TypeInheritanceList()
+}
+
+// ПРОВЕРЕНО
+void TypeInheritanceList(): {}
+{
+    TypeIdentifier() (<COMMA> TypeInheritanceList())?
+}
+
+/* =====================================================================================================================
+                        3. Expressions
+   ================================================================================================================== */
+
+/* ===================================================================
+                        3.1. GRAMMAR OF AN EXPRESSION
+   =================================================================== */
+
+//Проверено
+void Expression(): {}
+{
+    (TryOperator())? PrefixExpression() (BinaryExpressions())?
+}
+
+//Проверено
+void ExpressionList(): {}
+{
+    Expression() (<COMMA> ExpressionList())?
+}
+
+/* ===================================================================
+                        3.2. GRAMMAR OF A PREFIX EXPRESSION
+   =================================================================== */
+
+//Проверено
+void PrefixExpression(): {}
+{
+    (PrefixOperator())? PostfixExpression()
+    | InOutExpression()
+}
+
+//Проверено
+void InOutExpression(): {}
+{
+    <AMPERSAND> Identifier()
+}
+
+
+//Проверено
+void TryOperator(): {}
+{
+    <TRY>
+    | <TRY> <QUESTION_MARK>
+    | <TRY> <EXCLAMATION_MARK>
+}
+
+/* ===================================================================
+                        3.3. GRAMMAR OF A BINARY EXPRESSION
+   =================================================================== */
+
+//Проверено
+void BinaryExpression(): {}
+{
+    BinaryOperator() PrefixExpression()
+    | <ASSIGN> (TryOperator())? PrefixExpression()
+    | ConditionalOperator() (TryOperator())? PrefixExpression()
+    | TypeCastingOperator()
+}
+
+//Проверено
+void BinaryExpressions(): {}
+{
+    BinaryExpression() (BinaryExpressions())?
+}
+
+/* ===================================================================
+                        3.4. GRAMMAR OF A CONDITIONAL OPERATOR
+   =================================================================== */
+
+//Проверено
+void ConditionalOperator(): {}
+{
+    <QUESTION_MARK> (TryOperator())? Expression() <COLON>
+}
+
+/* ===================================================================
+                        3.5. GRAMMAR OF A TYPE-CASTING OPERATOR
+   =================================================================== */
+
+//Проверено, исправлено на строгую
+void TypeCastingOperator(): {}
+{
+    (<IS> | <AS> | <AS> <QUESTION_MARK> | <AS> <EXCLAMATION_MARK>) Type()
+}
+
+/* ===================================================================
+                        3.6. GRAMMAR OF A PRIMARY EXPRESSION
+   =================================================================== */
+
+//Проверено
+void PrimaryExpression(): {}
+{
+    LiteralExpression()
+    | Identifier() (GenericArgumentClause())?
+    | SelfExpression()
+    | SuperclassExpression()
+    | ClosureExpression()
+    | ParenthesizedExpression()
+    | TupleExpression()
+    | ImplicitMemberExpression()
+    | WildcardExpression()
+    | SelectorExpression()
+    | KeyPathExpression()
+}
+
+/* ===================================================================
+                        3.7. GRAMMAR OF A LITERAL EXPRESSION
+   =================================================================== */
+
+//Проверено
+void LiteralExpression(): {}
+{
+    Literal()
+    | ArrayLiteral()
+    | DictionaryLiteral()
+    | PlaygroundLiteral()
+    | <SHARP_FILE>
+    | <SHARP_LINE>
+    | <COLUMN>
+    | <FUNCTION>
+}
+
+//Проверено
+void ArrayLiteral(): {}
+{
+    <OPEN_SQUARE_BRACKET> (ArrayLiteralItems())? <CLOSED_SQUARE_BRACKET>
+}
+
+//Проверено, исправлено на строгую
+void ArrayLiteralItems(): {}
+{
+    ArrayLiteralItem() ((<COMMA>)? | <COMMA> ArrayLiteralItems())
+}
+
+//Проверено
+void ArrayLiteralItem(): {}
+{
+    Expression()
+}
+
+//Проверено, исправлено на строгую
+void DictionaryLiteral(): {}
+{
+    <OPEN_SQUARE_BRACKET> (DictionaryLiteralItems() | <COLON>) <CLOSED_SQUARE_BRACKET>
+}
+
+//Проверено, исправлено на строгую
+void DictionaryLiteralItems(): {}
+{
+    DictionaryLiteralItem() ((<COMMA>)? | <COMMA> DictionaryLiteralItems())
+}
+
+//Проверено
+void DictionaryLiteralItem(): {}
+{
+    Expression() <COLON> Expression()
+}
+
+//Проверено
+void PlaygroundLiteral(): {}
+{
+    <COLOR_LITERAL> <OPEN_PARENTHESIS> <RED> <COLON> Expression() <COMMA> <GREEN> <COLON> Expression() <COMMA> <BLUE> <COLON> Expression() <COMMA> <ALPHA> <COLON> Expression() <CLOSED_PARENTHESIS>
+    | <FILE_LITERAL> <OPEN_PARENTHESIS> <RESOURCE_NAME> <COLON> Expression() <CLOSED_PARENTHESIS>
+    | <IMAGE_LITERAL> <OPEN_PARENTHESIS> <RESOURCE_NAME> <COLON> Expression() <CLOSED_PARENTHESIS>
+}
+
+/* ===================================================================
+                        3.8. GRAMMAR OF A SELF EXPRESSION
+   =================================================================== */
+
+//Проверено
+void SelfExpression(): {}
+{
+    <SELF>
+    | SelfMethodExpression()
+    | SelfSubscriptExpression()
+    | SelfInitializerExpression()
+}
+
+//Проверено
+void SelfMethodExpression(): {}
+{
+    <SELF> <DOT> Identifier()
+}
+
+//Проверено
+void SelfSubscriptExpression(): {}
+{
+    <SELF> <OPEN_SQUARE_BRACKET> ExpressionList() <CLOSED_SQUARE_BRACKET>
+}
+
+//Проверено
+void SelfInitializerExpression(): {}
+{
+    <SELF> <DOT> <INIT>
+}
+
+/* ===================================================================
+                        3.9. GRAMMAR OF A SUPERCLASS EXPRESSION (DONE)
+   =================================================================== */
+
+//Проверено
+void SuperclassExpression(): {}
+{
+    SuperclassMethodExpression()
+    | SuperclassSubscriptExpression()
+    | SuperclassInitializerExpression()
+}
+
+//Проверено
+void SuperclassMethodExpression(): {}
+{
+    <SUPER> <DOT> (FunctionCallExpression() | Identifier())
+}
+
+//Проверено
+void SuperclassSubscriptExpression(): {}
+{
+    <SUPER> <OPEN_SQUARE_BRACKET> ExpressionList() <CLOSED_SQUARE_BRACKET>
+}
+
+//Проверено
+void SuperclassInitializerExpression(): {}
+{
+    <SUPER> <DOT> <INIT>
+}
+
+/* ===================================================================
+                        3.10. GRAMMAR OF A CLOSURE EXPRESSION
+   =================================================================== */
+
+//Проверено
+void ClosureExpression(): {}
+{
+    <OPEN_BRACKET> (ClosureSignature())? (Statements())? <CLOSED_BRACKET>
+}
+
+//Проверено
+// TODO: Это же не строгая?
+void ClosureSignature(): {}
+{
+    (CaptureList())? ClosureParameterClause() (<THROWS>)? (FunctionResult())? <IN>
+    | CaptureList() <IN>
+}
+
+//Проверено
+void ClosureParameterClause(): {}
+{
+    <OPEN_PARENTHESIS> (ClosureParameterList())? <CLOSED_PARENTHESIS>
+    | IdentifierList()
+}
+
+//Проверено
+void ClosureParameterList(): {}
+{
+    ClosureParameter()
+    | ClosureParameter() <COMMA> ClosureParameterList()
+}
+
+//Проверено
+void ClosureParameter(): {}
+{
+    ClosureParameterName() (TypeAnnotation())?
+    | ClosureParameterName() TypeAnnotation() <THREE_DOTS>
+}
+
+//Проверено
+void ClosureParameterName(): {}
+{
+    Identifier()
+}
+
+//Проверено
+void CaptureList(): {}
+{
+    <OPEN_SQUARE_BRACKET> CaptureListItems() <CLOSED_SQUARE_BRACKET>
+}
+
+//Проверено
+void CaptureListItems(): {}
+{
+    CaptureListItem()
+    | CaptureListItem() <COMMA> CaptureListItems()
+}
+
+//Проверено
+void CaptureListItem(): {}
+{
+    (CaptureSpecifier())? Expression()
+}
+
+//Проверено
+void CaptureSpecifier(): {}
+{
+    // TODO: проверить токены – unowned(safe) vs <UNOWNED> <OPEN_PARENTHESIS> <SAFE> <CLOSED_PARENTHESIS>
+    <WEAK>
+    | <UNOWNED>
+    | <UNOWNED> <OPEN_PARENTHESIS> <SAFE> <CLOSED_PARENTHESIS>
+    | <UNOWNED> <OPEN_PARENTHESIS> <UNSAFE> <CLOSED_PARENTHESIS>
+}
+
+/* ===================================================================
+                        3.11. GRAMMAR OF A IMPLICIT MEMBER EXPRESSION
+   =================================================================== */
+
+//Проверено
+void ImplicitMemberExpression(): {}
+{
+    <DOT> Identifier()
+}
+
+/* ===================================================================
+                        3.12. GRAMMAR OF A PARENTHESIZED EXPRESSION
+   =================================================================== */
+
+//Проверено
+void ParenthesizedExpression(): {}
+{
+    <OPEN_PARENTHESIS> Expression() <CLOSED_PARENTHESIS>
+}
+
+/* ===================================================================
+                        3.13. GRAMMAR OF A TUPLE EXPRESSION
+   =================================================================== */
+
+//Проверено
+void TupleExpression(): {}
+{
+    <OPEN_PARENTHESIS> (TupleElement() <COMMA> TupleElementList())? <CLOSED_PARENTHESIS>
+}
+
+//Проверено
+void TupleElementList(): {}
+{
+    TupleElement() (<COMMA> TupleTypeElementList())?
+}
+
+//Проверено
+void TupleElement(): {}
+{
+    (Identifier() <COLON>)? Expression()
+}
+
+/* ===================================================================
+                        3.14. GRAMMAR OF A WILDCARD EXPRESSION
+   =================================================================== */
+
+//Проверено
+void WildcardExpression(): {}
+{
+    <UNDERSCORE>
+}
+
+/* ===================================================================
+                        3.15. GRAMMAR OF A SELECTOR EXPRESSION
+   =================================================================== */
+
+//ToDo проверить токены getter: vs <GETTER> <COLON>
+void SelectorExpression(): {}
+{
+    <SELECTOR> <OPEN_PARENTHESIS> Expression() <CLOSED_PARENTHESIS>
+    | <SELECTOR> <OPEN_PARENTHESIS> <GETTER> <COLON> Expression() <CLOSED_PARENTHESIS>
+    | <SELECTOR> <OPEN_PARENTHESIS> <SETTER> <COLON> Expression() <CLOSED_PARENTHESIS>
+
+}
+
+/* ===================================================================
+                        3.16. GRAMMAR OF A KEY-PATH EXPRESSION
+   =================================================================== */
+
+//Проверено
+void KeyPathExpression(): {}
+{
+    <KEY_PATH> <OPEN_PARENTHESIS> Expression() <CLOSED_PARENTHESIS>
+}
+
+/* ===================================================================
+                        3.17. GRAMMAR OF A POSTFIX EXPRESSION (DONE)
+   =================================================================== */
+
+//ToDo проверить postfix-expression → postfix-expression­postfix-operator
+//ToDo проверить DynamicTypeExpression()
+void PostfixExpression(): {}
+{
+    SimplePostfixExpression()
+    | PrimaryExpression()
+    | DynamicTypeExpression()
+}
+
+//ToDo проверить рекурсию
+void SimplePostfixExpression(): {}
+{
+     (    InitializerExpression()
+        | FunctionCallExpression()
+//        | AssignmentExpression()
+        | ExplicitMemberExpression()
+        | PostfixSelfExpression()
+        | SubscriptExpression()
+        | ForcedValueExpression()
+        | OptionalChainingExpression()
+    ) (SimplePostfixExpression())?
+}
+
+void AssignmentExpression(): {}
+{
+    Identifier() <ASSIGN> Identifier()
+}
+
+/* ===================================================================
+                        3.18. GRAMMAR OF A FUNCTIONAL CALL EXPRESSION (DONE)
+   =================================================================== */
+
+void FunctionCallExpression(): {}
+{
+    Identifier() FunctionCallArgumentClause()
+    | (FunctionCallArgumentClause())? TrailingClosure()
+}
+
+//Проверено
+void FunctionCallArgumentClause(): {}
+{
+    <OPEN_PARENTHESIS> <CLOSED_PARENTHESIS>
+    | <OPEN_PARENTHESIS> FunctionCallArgumentList() <CLOSED_PARENTHESIS>
+}
+
+//Проверено
+void FunctionCallArgumentList(): {}
+{
+    FunctionCallArgument()
+    | FunctionCallArgument() <COMMA> FunctionCallArgumentList()
+}
+
+//Проверено, исправлено на строгую
+void FunctionCallArgument(): {}
+{
+    Identifier() <COLON> (Operator() | Identifier() | Expression())
+    | Operator()
+    | Expression()
+    | Identifier()
+}
+
+//Проверено
+void TrailingClosure(): {}
+{
+    ClosureExpression()
+}
+
+/* ===================================================================
+                        3.19. GRAMMAR OF AN INITIALIZER EXPRESSION
+   =================================================================== */
+/*ToDo правило: postfix-expression . init
+Проверить разрешение рекурсии, потому что сейчас просто .init пройдёт */
+void InitializerExpression(): {}
+{
+    <DOT> <INIT>
+    | <DOT> <INIT> <OPEN_PARENTHESIS> ArgumentNames() <CLOSED_PARENTHESIS>
+}
+
+/* ===================================================================
+                        3.20. GRAMMAR OF AN EXPLICIT MEMBER EXPRESSION
+   =================================================================== */
+
+/*ToDo правило: postfix-expression . decimal-digits
+Проверить разрешение рекурсии, потому что сейчас просто .decimal-digits пройдёт */
+void ExplicitMemberExpression(): {}
+{
+    <DOT> DecimalDigits()
+    | <DOT> Identifier() (GenericArgumentClause())?
+    | <DOT> Identifier() <OPEN_PARENTHESIS> ArgumentNames() <CLOSED_PARENTHESIS>
+}
+
+//Проверено
+void ArgumentNames(): {}
+{
+    ArgumentName() (ArgumentNames())?
+}
+
+//Проверено
+void ArgumentName(): {}
+{
+    Identifier() <COLON>
+}
+
+/* ===================================================================
+                        3.21. GRAMMAR OF A SELF EXPRESSION (DONE)
+   =================================================================== */
+
+/*ToDo правило: postfix-expression . self
+Проверить разрешение рекурсии, потому что сейчас просто .self */
+void PostfixSelfExpression(): {}
+{
+    <DOT> <SELF>
+}
+
+/* ===================================================================
+                        3.22. GRAMMAR OF A DYNAMIC TYPE EXPRESSION (DONE)
+   =================================================================== */
+
+//ToDo что это?
+void DynamicTypeExpression(): {}
+{
+    <TYPE> <OPEN_PARENTHESIS> <OF> <COLON> Expression() <CLOSED_PARENTHESIS>
+}
+
+/* ===================================================================
+                        3.23. GRAMMAR OF A SUBSCRIPT EXPRESSION
+   =================================================================== */
+
+/*ToDo правило: postfix-expression [ expression-list ]
+Проверить разрешение рекурсии, потому что сейчас просто [expression-list] пройдёт */
+void SubscriptExpression(): {}
+{
+     <OPEN_SQUARE_BRACKET> ExpressionList() <CLOSED_SQUARE_BRACKET>
+}
+
+/* ===================================================================
+                        3.24. GRAMMAR OF A FORCED-VALUE EXPRESSION
+   =================================================================== */
+
+/*ToDo правило: postfix-expression !
+Проверить разрешение рекурсии, потому что сейчас просто ! пройдёт */
+void ForcedValueExpression(): {}
+{
+    <EXCLAMATION_MARK>
+}
+
+/* ===================================================================
+                        3.25. GRAMMAR OF AN OPTIONAL-CHAINING EXPRESSION
+   =================================================================== */
+
+/*ToDo правило: postfix-expression ?
+Проверить разрешение рекурсии, потому что сейчас просто ? пройдёт */
+void OptionalChainingExpression(): {}
+{
+    <QUESTION_MARK>
+}
+
+
+/* =====================================================================================================================
+                        4. Statements
+   ================================================================================================================== */
+
+
+/* ===================================================================
+                        4.1. GRAMMAR OF A STATEMENT (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО, переписано на строгую
+void Statement(): {}
+{
+    (BranchStatement()
+    | Expression()
+    | Declaration()
+    | LoopStatement()
+    | LabeledStatement()
+    | ControlTransferStatement()
+    | DeferStatement()
+    | DoStatement()
+    | CompilerControlStatement()) (<SEMICOLON>)?
+}
+
+// ПРОВЕРЕНО
+void Statements(): {}
+{
+    Statement() (Statements())?
+}
+
+
+/* ===================================================================
+                        4.2. GRAMMAR OF A LOOP STATEMENT (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void LoopStatement(): {}
+{
+    ForInStatement()
+    | WhileStatement()
+    | RepeatWhileStatement()
+}
+
+
+/* ===================================================================
+                        4.3. GRAMMAR OF A FOR-IN STATEMENT (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void ForInStatement(): {}
+{
+    <FOR> (<CASE>)? Pattern() <IN> Expression() (WhereClause())? CodeBlock()
+}
+
+
+/* ===================================================================
+                        4.4. GRAMMAR OF A WHILE STATEMENT (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void WhileStatement(): {}
+{
+    <WHILE> ConditionList() CodeBlock()
+}
+
+// ПРОВЕРЕНО, переписано на строгую
+void ConditionList(): {}
+{
+    Condition() (<COMMA> ConditionList())?
+}
+
+// ПРОВЕРЕНО
+void Condition(): {}
+{
+    Expression()
+    | AvailabilityCondition()
+    | CaseCondition()
+    | OptionalBridgingCondition()
+}
+
+// ПРОВЕРЕНО
+void CaseCondition(): {}
+{
+    <CASE> Pattern() Initializer()
+}
+
+// ПРОВЕРЕНО
+void OptionalBridgingCondition(): {}
+{
+    <LET> Pattern() Initializer()
+    | <VAR> Pattern() Initializer()
+}
+
+
+/* ===================================================================
+                        4.5. GRAMMAR OF A REPEAT-WHILE STATEMENT (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void RepeatWhileStatement(): {}
+{
+    <REPEAT> CodeBlock() <WHILE> Expression()
+}
+
+
+/* ===================================================================
+                        4.6. GRAMMAR OF A BRANCH STATEMENT (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void BranchStatement(): {}
+{
+    IfStatement()
+    | GuardStatement()
+    | SwitchStatement()
+}
+
+
+/* ===================================================================
+                        4.7. GRAMMAR OF AN IF STATEMENT (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void IfStatement(): {}
+{
+    <IF> ConditionList() CodeBlock() (ElseClause())?
+}
+
+// ПРОВЕРЕНО
+void ElseClause(): {}
+{
+    <ELSE> CodeBlock()
+    | <ELSE> IfStatement()
+}
+
+
+/* ===================================================================
+                        4.8. GRAMMAR OF A GUARD STATEMENT (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void GuardStatement(): {}
+{
+    <GUARD> ConditionList() <ELSE> CodeBlock()
+}
+
+
+/* ===================================================================
+                        4.9. GRAMMAR OF A SWITCH STATEMENT (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void SwitchStatement(): {}
+{
+    <SWITCH> Expression() <OPEN_BRACKET> (SwitchCases())? <CLOSED_BRACKET>
+}
+
+// ПРОВЕРЕНО
+void SwitchCases(): {}
+{
+    SwitchCase() (SwitchCases())?
+}
+
+// ПРОВЕРЕНО
+void SwitchCase(): {}
+{
+    CaseLabel() Statements()
+    | DefaultLabel() Statements()
+}
+
+// ПРОВЕРЕНО
+void CaseLabel(): {}
+{
+    <CASE> CaseItemList() <COLON>
+}
+
+// ПРОВЕРЕНО
+void CaseItemList(): {}
+{
+    Pattern() (WhereClause())?
+    | Pattern() (WhereClause())? <COMMA> CaseItemList()
+}
+
+// ПРОВЕРЕНО
+void DefaultLabel(): {}
+{
+    <DEFAULT_1> <COLON>
+}
+
+// ПРОВЕРЕНО
+void WhereClause(): {}
+{
+    <WHERE> WhereExpression()
+}
+
+// ПРОВЕРЕНО
+void WhereExpression(): {}
+{
+    Expression()
+}
+
+
+/* ===================================================================
+                        4.10. GRAMMAR OF A LABELED STATEMENT (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО, исправлено на строгую
+void LabeledStatement(): {}
+{
+    StatementLabel() (LoopStatement() | IfStatement() | SwitchStatement() | DoStatement())
+}
+
+// ПРОВЕРЕНО
+void StatementLabel(): {}
+{
+    LabelName() <COLON>
+}
+
+// ПРОВЕРЕНО
+void LabelName(): {}
+{
+    Identifier()
+}
+
+
+/* ===================================================================
+                        4.11. GRAMMAR OF A CONTROL TRANSFER STATEMENT (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void ControlTransferStatement(): {}
+{
+    BreakStatement()
+    | ContinueStatement()
+    | FallthroughStatement()
+    | ReturnStatement()
+    | ThrowStatement()
+}
+
+
+/* ===================================================================
+                        4.12. GRAMMAR OF A BREAK STATEMENT (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void BreakStatement(): {}
+{
+    <BREAK> (LabelName())?
+}
+
+
+/* ===================================================================
+                        4.13. GRAMMAR OF A CONTINUE STATEMENT (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void ContinueStatement(): {}
+{
+    <CONTINUE> (LabelName())?
+}
+
+
+/* ===================================================================
+                        4.14. GRAMMAR OF A FALLTHROUGH STATEMENT (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void FallthroughStatement(): {}
+{
+    <FALLTHROUGH>
+}
+
+
+/* ===================================================================
+                        4.15. GRAMMAR OF A RETURN STATEMENT (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void ReturnStatement(): {}
+{
+    <RETURN> (Expression())?
+}
+
+
+/* ===================================================================
+                        4.16. GRAMMAR OF A THROW STATEMENT (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void ThrowStatement(): {}
+{
+    <THROW> Expression()
+}
+
+
+/* ===================================================================
+                        4.17. GRAMMAR OF A DEFER STATEMENT (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void DeferStatement(): {}
+{
+    <DEFER> CodeBlock()
+}
+
+
+/* ===================================================================
+                        4.18. GRAMMAR OF A DO STATEMENT (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void DoStatement(): {}
+{
+    <DO> CodeBlock() (CatchClauses())?
+}
+
+// ПРОВЕРЕНО
+void CatchClauses(): {}
+{
+    CatchClause() (CatchClauses())?
+}
+
+// ПРОВЕРЕНО
+void CatchClause(): {}
+{
+    <CATCH> (Pattern())? (WhereClause())? CodeBlock()
+}
+
+
+/* ===================================================================
+                        4.19. GRAMMAR OF A COMPILER CONTROL STATEMENT (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void CompilerControlStatement(): {}
+{
+    ConditionalCompilationBlock()
+    | LineControlStatement()
+}
+
+
+/* ===================================================================
+                        4.20. GRAMMAR OF A CONDITIONAL COMPILATION BLOCK (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void ConditionalCompilationBlock(): {}
+{
+    IfDirectiveClause() (ElseifDirectiveClauses())? (ElseDirectiveClause())? EndifDirective()
+}
+
+// ПРОВЕРЕНО
+void IfDirectiveClause(): {}
+{
+    IfDirective() CompilationCondition() (Statements())?
+}
+
+// ПРОВЕРЕНО
+void ElseifDirectiveClauses(): {}
+{
+    ElseifDirectiveClause() (ElseifDirectiveClauses())?
+}
+
+// ПРОВЕРЕНО
+void ElseifDirectiveClause(): {}
+{
+    ElseifDirective() CompilationCondition() (Statements())?
+}
+
+// ПРОВЕРЕНО
+void ElseDirectiveClause(): {}
+{
+    ElseDirective() (Statements())?
+}
+
+// ПРОВЕРЕНО
+void IfDirective(): {}
+{
+    <SHARP_IF>
+}
+
+// ПРОВЕРЕНО
+void ElseifDirective(): {}
+{
+    <SHARP_ELSEIF>
+}
+
+// ПРОВЕРЕНО
+void ElseDirective(): {}
+{
+    <SHARP_ELSE>
+}
+
+// ПРОВЕРЕНО
+void EndifDirective(): {}
+{
+    <SHARP_ENDIF>
+}
+
+// ПРОВЕРЕНО
+void CompilationCondition(): {}
+{
+    (   PlatformCondition()
+        | Identifier()
+        | BooleanLiteral()
+        | <OPEN_PARENTHESIS> CompilationCondition() <CLOSED_PARENTHESIS>
+        | <EXCLAMATION_MARK> CompilationCondition()
+    ) (SimpleCompilationCondition())?
+}
+
+// TODO: Проверить еще раз
+void SimpleCompilationCondition(): {}
+{
+    (   <DBL_AMPERSAND> CompilationCondition()
+        | <DBL_OR> CompilationCondition()
+    ) (SimpleCompilationCondition())?
+}
+
+// ПРОВЕРЕНО
+void PlatformCondition(): {}
+{
+    <OS> <OPEN_PARENTHESIS> OperatingSystem() <CLOSED_PARENTHESIS>
+    | <ARCH> <OPEN_PARENTHESIS> Architecture() <CLOSED_PARENTHESIS>
+    | <SWIFT> <OPEN_PARENTHESIS> <MORE_OR_EQUALS> SwiftVersion() <CLOSED_PARENTHESIS>
+}
+
+// ПРОВЕРЕНО
+void OperatingSystem(): {}
+{
+    <MAC_OS>
+    | <IOS>
+    | <WATCH_OS>
+    | <TV_OS>
+}
+
+// ПРОВЕРЕНО
+void Architecture(): {}
+{
+    <I_386>
+    | <X_86_64>
+    | <ARM>
+    | <ARM_64>
+}
+
+// ПРОВЕРЕНО
+void SwiftVersion(): {}
+{
+    DecimalDigits() (SwiftVersionConfiguration())?
+}
+
+// ПРОВЕРЕНО
+void SwiftVersionConfiguration(): {}
+{
+    <DOT> DecimalDigits() (SwiftVersionConfiguration())?
+}
+
+
+/* ===================================================================
+                        4.21. GRAMMAR OF A LINE CONTROL STATEMENT (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void LineControlStatement(): {}
+{
+    <SOURCE_LOCATION> <OPEN_PARENTHESIS> <FILE> FileName() <COMMA> <LINE> LineNumber() <CLOSED_PARENTHESIS>
+    | <SOURCE_LOCATION> <OPEN_PARENTHESIS> <CLOSED_PARENTHESIS>
+}
+
+// ПРОВЕРЕНО
+void LineNumber(): {}
+{
+    DecimalDigits()
+}
+
+// ПРОВЕРЕНО
+void FileName(): {}
+{
+    StaticStringLiteral()
+}
+
+
+/* ===================================================================
+                        4.22. GRAMMAR OF AN AVAILABILITY CONDITION (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void AvailabilityCondition(): {}
+{
+    <SHARP_AVAILABLE> <OPEN_PARENTHESIS> AvailabilityArguments() <CLOSED_PARENTHESIS>
+}
+
+// ПРОВЕРЕНО
+void AvailabilityArguments(): {}
+{
+    AvailabilityArgument()
+    | AvailabilityArgument() <COMMA> AvailabilityArguments()
+}
+
+// ПРОВЕРЕНО
+void AvailabilityArgument(): {}
+{
+    PlatformName() PlatformVersion()
+    | <STAR>
+}
+
+// ПРОВЕРЕНО
+void PlatformName(): {}
+{
+    <IOS>
+    | <IOS_APP_EXT>
+    | <MAC_OS>
+    | <MAC_OS_APP_EXT>
+    | <WATCH_OS>
+    | <TV_OS>
+}
+
+// ПРОВЕРЕНО
+void PlatformVersion(): {}
+{
+    DecimalDigits()
+    | DecimalDigits() <DOT> DecimalDigits()
+    | DecimalDigits() <DOT> DecimalDigits() <DOT> DecimalDigits()
+}
+
+
+
+/* =====================================================================================================================
+                        5. Declarations
+   ================================================================================================================== */
+
+
+/* ===================================================================
+                        5.1. GRAMMAR OF A DECLARATION
+   =================================================================== */
+
+//Проверено
+void Declaration(): {}
+{
+    ImportDeclaration()
+    | ConstantDeclaration()
+    | VariableDeclaration()
+    | TypealiasDeclaration()
+    | FunctionDeclaration()
+    | EnumDeclaration()
+    | StructDeclaration()
+    | ClassDeclaration()
+    | ProtocolDeclaration()
+    | InitializerDeclaration()
+    | DeinitializerDeclaration()
+    | ExtensionDeclaration()
+    | SubscriptDeclaration()
+    | OperatorDeclaration()
+    | PrecedenceGroupDeclaration()
+}
+
+//Проверено
+void Declarations(): {}
+{
+    Declaration() (Declarations())?
+}
+
+/* ===================================================================
+                        5.2. GRAMMAR OF A TOP-LEVEL DECLARATION
+   =================================================================== */
+
+//Проверено
+void TopLevelDeclaration(): {}
+{
+    (Statements())?
+}
+
+/* ===================================================================
+                        5.3. GRAMMAR OF A CODE BLOCK
+   =================================================================== */
+
+//Проверено
+void CodeBlock(): {}
+{
+    <OPEN_BRACKET> (Statements())? <CLOSED_BRACKET>
+}
+
+/* ===================================================================
+                        5.4. GRAMMAR OF AN IMPORT DECLARATION
+   =================================================================== */
+
+//Проверено
+void ImportDeclaration(): {}
+{
+    (Attributes())? <IMPORT> (ImportKind())? ImportPath()
+}
+
+//Проверено
+void ImportKind(): {}
+{
+    <TYPE_ALIAS>
+    | <STRUCT>
+    | <CLASS>
+    | <ENUM>
+    | <PROTOCOL>
+    | <VAR>
+    | <FUNC>
+}
+
+//Проверено, исправлено на строгую
+void ImportPath(): {}
+{
+    ImportPathIdentifier() (<DOT> ImportPath())?
+}
+
+//Проверено
+void ImportPathIdentifier(): {}
+{
+    Identifier()
+    | Operator()
+}
+
+
+/* ===================================================================
+                        5.5. GRAMMAR OF A CONSTANT DECLARATION
+   =================================================================== */
+
+//Проверено
+void ConstantDeclaration(): {}
+{
+    (Attributes())? (DeclarationModifiers())? <LET> PatternInitializerList()
+}
+
+//Проверено
+void PatternInitializerList(): {}
+{
+    PatternInitializer() (<COMMA> PatternInitializerList())?
+}
+
+//Проверено
+void PatternInitializer(): {}
+{
+    Pattern() (Initializer())?
+}
+
+//Проверено
+void Initializer(): {}
+{
+    <ASSIGN> Expression()
+}
+
+
+/* ===================================================================
+                        5.6. GRAMMAR OF A VARIABLE DECLARATION
+   =================================================================== */
+
+//Проверено
+void VariableDeclaration(): {}
+{
+    VariableDeclarationHead() PatternInitializerList()
+    | VariableDeclarationHead() VariableName() TypeAnnotation() CodeBlock()
+    | VariableDeclarationHead() VariableName() TypeAnnotation() GetterSetterBlock()
+    | VariableDeclarationHead() VariableName() TypeAnnotation() GetterSetterKeywordBlock()
+    | VariableDeclarationHead() VariableName() Initializer() WillSetDidSetBlock()
+    | VariableDeclarationHead() VariableName() TypeAnnotation() (Initializer())? WillSetDidSetBlock()
+}
+
+
+//Проверено
+void VariableDeclarationHead(): {}
+{
+    (Attributes())? (DeclarationModifiers())? <VAR>
+}
+
+//Проверено
+void VariableName(): {}
+{
+    Identifier()
+}
+
+
+//Проверено
+void GetterSetterBlock(): {}
+{
+    CodeBlock()
+    | <OPEN_BRACKET> GetterClause() (SetterClause())? <CLOSED_BRACKET>
+    | <OPEN_BRACKET> SetterClause() GetterClause() <CLOSED_BRACKET>
+}
+
+//Проверено
+void GetterClause(): {}
+{
+    (Attributes())? (MutationModifier())? <GET> CodeBlock()
+}
+
+//Проверено
+void SetterClause(): {}
+{
+   (Attributes())? (MutationModifier())? <SET> (SetterName())? CodeBlock()
+}
+
+//Проверено
+void SetterName(): {}
+{
+    <OPEN_PARENTHESIS> Identifier() <CLOSED_PARENTHESIS>
+}
+
+
+//Проверено
+void GetterSetterKeywordBlock(): {}
+{
+    <OPEN_BRACKET> GetterKeywordClause() (SetterKeywordClause())? <CLOSED_BRACKET>
+    | <OPEN_BRACKET> SetterKeywordClause() GetterKeywordClause() <CLOSED_BRACKET>
+}
+
+//Проверено
+void GetterKeywordClause(): {}
+{
+    (Attributes())? (MutationModifier())? <GET>
+}
+
+//Проверено
+void SetterKeywordClause(): {}
+{
+   (Attributes())? (MutationModifier())? <SET>
+}
+
+
+//Проверено
+void WillSetDidSetBlock(): {}
+{
+    <OPEN_BRACKET> WillSetClause() (DidSetClause())? <CLOSED_BRACKET>
+    | <OPEN_BRACKET> DidSetClause() (WillSetClause())? <CLOSED_BRACKET>
+}
+
+//Проверено
+void WillSetClause(): {}
+{
+    (Attributes())? <WILL_SET> (SetterName())? CodeBlock()
+}
+
+//Проверено
+void DidSetClause(): {}
+{
+   (Attributes())? <DID_SET> (SetterName())? CodeBlock()
+}
+
+
+
+/* ===================================================================
+                        5.7. GRAMMAR OF A TYPE ALIAS DECLARATION
+   =================================================================== */
+
+//Проверено
+void TypealiasDeclaration(): {}
+{
+    (Attributes())? (AccessLevelModifier())? <TYPE_ALIAS> TypealiasName() (GenericParameterClause())? TypealiasAssignment()
+}
+
+//Проверено
+void TypealiasName(): {}
+{
+    Identifier()
+}
+
+//Проверено
+void TypealiasAssignment(): {}
+{
+    <ASSIGN> Type()
+}
+
+
+/* ===================================================================
+                        5.8. GRAMMAR OF A FUNCTION DECLARATION
+   =================================================================== */
+
+//Проверено
+void FunctionDeclaration(): {}
+{
+    FunctionHead() FunctionName() (GenericParameterClause())? FunctionSignature() (GenericWhereClause())? (FunctionBody())?
+}
+
+
+//Проверено
+void FunctionHead(): {}
+{
+    (Attributes())? (DeclarationModifiers())? <FUNC>
+}
+
+//Проверено
+void FunctionName(): {}
+{
+    Identifier()
+    | Operator()
+}
+
+
+//Проверено
+void FunctionSignature(): {}
+{
+    ParameterClause() ((<THROWS>)? | <RETHROWS>) (FunctionResult())?
+}
+
+//Проверено
+void FunctionResult(): {}
+{
+    <ARROW_RIGHT> (Attributes())? Type()
+}
+
+//Проверено
+void FunctionBody(): {}
+{
+    CodeBlock()
+}
+
+
+//Проверено
+void ParameterClause(): {}
+{
+    <OPEN_PARENTHESIS> (ParameterList())? <CLOSED_PARENTHESIS>
+}
+
+//Проверено
+void ParameterList(): {}
+{
+    Parameter() (<COMMA> ParameterList())?
+}
+
+//Проверено
+void Parameter(): {}
+{
+    LocalParameterName() TypeAnnotation() ((DefaultArgumentClause())? | (<THREE_DOTS>)?)
+    | ExternalParameterName() LocalParameterName() TypeAnnotation() ((DefaultArgumentClause())? | (<THREE_DOTS>)?)
+}
+
+//Проверено
+void ExternalParameterName(): {}
+{
+    Identifier()
+}
+
+
+//Проверено
+void LocalParameterName(): {}
+{
+    Identifier()
+}
+
+//Проверено
+void DefaultArgumentClause(): {}
+{
+    <ASSIGN> Expression()
+}
+
+
+/* ===================================================================
+                        5.9. GRAMMAR OF AN ENUMERATION DECLARATION
+   =================================================================== */
+
+//Проверено
+void EnumDeclaration(): {}
+{
+    (Attributes())? (AccessLevelModifier())? UnionStyleEnum()
+    | (Attributes())? (AccessLevelModifier())? RawValueStyleEnum()
+}
+
+
+//Проверено
+void UnionStyleEnum(): {}
+{
+    (<INDIRECT>)? <ENUM> EnumName() (GenericParameterClause())? (TypeInheritanceClause())? (GenericWhereClause())? <OPEN_BRACKET> (UnionStyleEnumMembers())? <CLOSED_BRACKET>
+}
+
+//Проверено
+void UnionStyleEnumMembers(): {}
+{
+    UnionStyleEnumMember() (UnionStyleEnumMembers())?
+}
+
+//Проверено
+void UnionStyleEnumMember(): {}
+{
+    Declaration()
+    | UnionStyleEnumCaseClause()
+    | CompilerControlStatement()
+}
+
+//Проверено
+void UnionStyleEnumCaseClause(): {}
+{
+    (Attributes())? (<INDIRECT>)? <CASE> UnionStyleEnumCaseList()
+}
+
+//Проверено
+void UnionStyleEnumCaseList(): {}
+{
+    UnionStyleEnumCase()
+    | UnionStyleEnumCase() <COMMA> UnionStyleEnumCaseList()
+}
+
+//Проверено
+void UnionStyleEnumCase(): {}
+{
+    EnumCaseName() (TupleType())?
+}
+
+//Проверено
+void EnumName(): {}
+{
+    Identifier()
+}
+
+//Проверено
+void EnumCaseName(): {}
+{
+    Identifier()
+}
+
+
+//Проверено
+void RawValueStyleEnum(): {}
+{
+    <ENUM> EnumName() (GenericParameterClause())? TypeInheritanceClause() (GenericWhereClause())? <OPEN_BRACKET> RawValueStyleEnumMembers() <CLOSED_BRACKET>
+}
+
+//Проверено
+void RawValueStyleEnumMembers(): {}
+{
+    RawValueStyleEnumMember() (RawValueStyleEnumMembers())?
+}
+
+//Проверено
+void RawValueStyleEnumMember(): {}
+{
+    Declaration()
+    | RawValueStyleEnumCaseClause()
+    | CompilerControlStatement()
+}
+
+//Проверено
+void RawValueStyleEnumCaseClause(): {}
+{
+    (Attributes())? <CASE> RawValueStyleEnumCaseList()
+}
+
+//Проверено
+void RawValueStyleEnumCaseList(): {}
+{
+    RawValueStyleEnumCase()
+    | RawValueStyleEnumCase() <COMMA> RawValueStyleEnumCaseList()
+}
+
+//Проверено
+void RawValueStyleEnumCase(): {}
+{
+    EnumCaseName() (RawValueAssignment())?
+}
+
+//Проверено
+void RawValueAssignment(): {}
+{
+    <ASSIGN> RawValueLiteral()
+}
+
+//Проверено
+void RawValueLiteral(): {}
+{
+    NumericLiteral()
+    | StaticStringLiteral()
+    | BooleanLiteral()
+}
+
+
+/* ===================================================================
+                        5.10. GRAMMAR OF A STRUCTURE DECLARATION
+   =================================================================== */
+
+//Проверено
+void StructDeclaration(): {}
+{
+    (Attributes())? (AccessLevelModifier())? <STRUCT> StructName() (GenericParameterClause())? (TypeInheritanceClause())? (GenericWhereClause())? StructBody()
+}
+
+//Проверено
+void StructName(): {}
+{
+    Identifier()
+}
+
+//Проверено
+void StructBody(): {}
+{
+    <OPEN_BRACKET> (StructMembers())? <CLOSED_BRACKET>
+}
+
+
+//Проверено
+void StructMembers(): {}
+{
+    StructMember() (StructMembers())?
+}
+
+//Проверено
+void StructMember(): {}
+{
+    Declaration()
+    | CompilerControlStatement()
+}
+
+
+/* ===================================================================
+                        5.11. GRAMMAR OF A CLASS DECLARATION
+   =================================================================== */
+
+//Проверено
+void ClassDeclaration(): {}
+{
+    (Attributes())? (AccessLevelModifier())? (<FINAL>)? <CLASS> ClassName() (GenericParameterClause())? (TypeInheritanceClause())? (GenericWhereClause())? ClassBody()
+    | (Attributes())? <FINAL> (AccessLevelModifier())? <CLASS> ClassName() (GenericParameterClause())? (TypeInheritanceClause())? (GenericWhereClause())? ClassBody()
+}
+
+//Проверено
+void ClassName(): {}
+{
+    Identifier()
+}
+
+//Проверено
+void ClassBody(): {}
+{
+    <OPEN_BRACKET> (ClassMembers())? <CLOSED_BRACKET>
+}
+
+
+//Проверено
+void ClassMembers(): {}
+{
+    ClassMember() (ClassMembers())?
+}
+
+//Проверено
+void ClassMember(): {}
+{
+    Declaration()
+    | CompilerControlStatement()
+}
+
+
+/* ===================================================================
+                        5.12. GRAMMAR OF A PROTOCOL DECLARATION
+   =================================================================== */
+
+//Проверено
+void ProtocolDeclaration(): {}
+{
+    (Attributes())? (AccessLevelModifier())? <PROTOCOL> ProtocolName() (TypeInheritanceClause())? ProtocolBody()
+}
+
+//Проверено
+void ProtocolName(): {}
+{
+    Identifier()
+}
+
+//Проверено
+void ProtocolBody(): {}
+{
+    <OPEN_BRACKET> (ProtocolMembers())? <CLOSED_BRACKET>
+}
+
+
+//Проверено
+void ProtocolMembers(): {}
+{
+    ProtocolMember() (ProtocolMembers())?
+}
+
+//Проверено
+void ProtocolMember(): {}
+{
+    ProtocolMemberDeclaration()
+    | CompilerControlStatement()
+}
+
+
+//Проверено
+void ProtocolMemberDeclaration(): {}
+{
+    ProtocolPropertyDeclaration()
+    | ProtocolMethodDeclaration()
+    | ProtocolInitializerDeclaration()
+    | ProtocolSubscriptDeclaration()
+    | ProtocolAssociatedTypeDeclaration()
+    | TypealiasDeclaration()
+}
+
+
+/* ===================================================================
+                        5.13. GRAMMAR OF A PROTOCOL PROPERTY DECLARATION
+   =================================================================== */
+
+//Проверено
+void ProtocolPropertyDeclaration(): {}
+{
+    VariableDeclarationHead() VariableName() TypeAnnotation() GetterSetterKeywordBlock()
+}
+
+
+/* ===================================================================
+                        5.14. GRAMMAR OF A PROTOCOL METHOD DECLARATION
+   =================================================================== */
+
+//Проверено
+void ProtocolMethodDeclaration(): {}
+{
+    FunctionHead() FunctionName() (GenericParameterClause())? FunctionSignature() (GenericWhereClause())?
+}
+
+
+/* ===================================================================
+                        5.15. GRAMMAR OF A PROTOCOL INITIALIZER DECLARATION
+   =================================================================== */
+
+//Проверено
+void ProtocolInitializerDeclaration(): {}
+{
+    InitializerHead() (GenericParameterClause())? ParameterClause() (<THROWS>)? (GenericWhereClause())?
+    | InitializerHead() (GenericParameterClause())? ParameterClause() <RETHROWS> (GenericWhereClause())?
+}
+
+
+/* ===================================================================
+                        5.16. GRAMMAR OF A PROTOCOL SUBSCRIPT DECLARATION
+   =================================================================== */
+
+//Проверено
+void ProtocolSubscriptDeclaration(): {}
+{
+    SubscriptHead() SubscriptResult() GetterSetterKeywordBlock()
+}
+
+
+/* ===================================================================
+                        5.17. GRAMMAR OF A PROTOCOL ASSOCIATED DECLARATION
+   =================================================================== */
+
+//Проверено
+void ProtocolAssociatedTypeDeclaration(): {}
+{
+    (Attributes())? (AccessLevelModifier())? <ASSOCIATED_TYPE> TypealiasName() (TypeInheritanceClause())? (TypealiasAssignment())?
+}
+
+
+/* ===================================================================
+                        5.18. GRAMMAR OF AN INITIALIZER DECLARATION
+   =================================================================== */
+
+//Проверено
+void InitializerDeclaration(): {}
+{
+    InitializerHead() (GenericParameterClause())? ParameterClause() (<THROWS>)? (GenericWhereClause())? InitializerBody()
+    | InitializerHead() (GenericParameterClause())? ParameterClause() <RETHROWS> (GenericWhereClause())? InitializerBody()
+}
+
+//Проверено
+void InitializerHead(): {}
+{
+    (Attributes())? (DeclarationModifiers())? <INIT>
+    | (Attributes())? (DeclarationModifiers())? <INIT> <QUESTION_MARK>
+    | (Attributes())? (DeclarationModifiers())? <INIT> <EXCLAMATION_MARK>
+}
+
+//Проверено
+void InitializerBody(): {}
+{
+    CodeBlock()
+}
+
+
+/* ===================================================================
+                        5.19. GRAMMAR OF A DEINITIALIZER DECLARATION
+   =================================================================== */
+
+//Проверено
+void DeinitializerDeclaration(): {}
+{
+    (Attributes())? <DEINIT> CodeBlock()
+}
+
+
+/* ===================================================================
+                        5.20. GRAMMAR OF AN EXTENSION DECLARATION
+   =================================================================== */
+
+//Проверено
+void ExtensionDeclaration(): {}
+{
+    (Attributes())? (AccessLevelModifier())? <EXTENSION> TypeIdentifier() (TypeInheritanceClause())? ExtensionBody()
+    | (Attributes())? (AccessLevelModifier())? <EXTENSION> TypeIdentifier() GenericWhereClause() ExtensionBody()
+}
+
+//Проверено
+void ExtensionBody(): {}
+{
+    <OPEN_BRACKET> (ExtensionMembers())? <CLOSED_BRACKET>
+}
+
+
+//Проверено
+void ExtensionMembers(): {}
+{
+    ExtensionMember() (ExtensionMembers())?
+}
+
+//Проверено
+void ExtensionMember(): {}
+{
+    Declaration()
+    | CompilerControlStatement()
+}
+
+
+
+/* ===================================================================
+                        5.21. GRAMMAR OF A SUBSCRIPT DECLARATION
+   =================================================================== */
+
+//Проверено
+void SubscriptDeclaration(): {}
+{
+    SubscriptHead() SubscriptResult() CodeBlock()
+    | SubscriptHead() SubscriptResult() GetterSetterBlock()
+    | SubscriptHead() SubscriptResult() GetterSetterKeywordBlock()
+}
+
+//Проверено
+void SubscriptHead(): {}
+{
+    (Attributes())? (DeclarationModifiers())? <SUBSCRIPT> ParameterClause()
+}
+
+//Проверено
+void SubscriptResult(): {}
+{
+    <ARROW_RIGHT> (Attributes())? Type()
+}
+
+
+/* ===================================================================
+                        5.22. GRAMMAR OF AN OPERATOR DECLARATION
+   =================================================================== */
+
+//Проверено
+void OperatorDeclaration(): {}
+{
+    PrefixOperatorDeclaration()
+    | PostfixOperatorDeclaration()
+    | InfixOperatorDeclaration()
+}
+
+
+//Проверено
+void PrefixOperatorDeclaration(): {}
+{
+    <PREFIX> <OPERATOR> Operator()
+}
+
+//Проверено
+void PostfixOperatorDeclaration(): {}
+{
+    <POSTFIX> <OPERATOR> Operator()
+}
+
+//Проверено
+void InfixOperatorDeclaration(): {}
+{
+    <INFIX> <OPERATOR> Operator() (InfixOperatorGroup())?
+}
+
+
+//Проверено
+void InfixOperatorGroup(): {}
+{
+    PrecedenceGroupName()
+}
+
+
+/* ===================================================================
+                        5.23. GRAMMAR OF A PRECEDENCE GROUP DECLARATION
+   =================================================================== */
+
+//Проверено
+void PrecedenceGroupDeclaration(): {}
+{
+    <PRECEDENCE_GROUP> PrecedenceGroupName() <OPEN_BRACKET> (PrecedenceGroupAttributes())? <CLOSED_BRACKET>
+}
+
+
+//Проверено
+void PrecedenceGroupAttributes(): {}
+{
+    PrecedenceGroupAttribute() (PrecedenceGroupAttributes())?
+}
+
+//Проверено
+void PrecedenceGroupAttribute(): {}
+{
+    PrecedenceGroupRelation()
+    | PrecedenceGroupAssignment()
+    | PrecedenceGroupAssociativity()
+}
+
+//Проверено
+void PrecedenceGroupRelation(): {}
+{
+    <HIGHER_THAN> <COLON> PrecedenceGroupNames()
+    | <LOWER_THAN> <COLON> PrecedenceGroupNames()
+}
+
+//Проверено
+void PrecedenceGroupAssignment(): {}
+{
+    <ASSIGNMENT> <COLON> BooleanLiteral()
+}
+
+//Проверено
+void PrecedenceGroupAssociativity(): {}
+{
+    <ASSOCIATIVITY> <COLON> <LEFT>
+    | <ASSOCIATIVITY> <COLON> <RIGHT>
+    | <ASSOCIATIVITY> <COLON> <NONE>
+}
+
+
+//Проверено
+void PrecedenceGroupNames(): {}
+{
+    PrecedenceGroupName()
+    | PrecedenceGroupName() <COMMA> PrecedenceGroupNames()
+}
+
+//Проверено
+void PrecedenceGroupName(): {}
+{
+    Identifier()
+}
+
+
+/* ===================================================================
+                        5.24. GRAMMAR OF A DECLARATION MODIFIER
+   =================================================================== */
+
+//Проверено
+void DeclarationModifier(): {}
+{
+    <CLASS>
+    | < CONVENIENCE>
+    | <DYNAMIC>
+    | <FINAL>
+    | <INFIX>
+    | <LAZY>
+    | <OPTIONAL>
+    | <OVERRIDE>
+    | <POSTFIX>
+    | <PREFIX>
+    | <REQUIRED>
+    | <STATIC>
+    | <UNOWNED>
+    | <UNOWNED> <OPEN_PARENTHESIS> <SAFE> <CLOSED_PARENTHESIS>
+    | <UNOWNED> <OPEN_PARENTHESIS> <UNSAFE> <CLOSED_PARENTHESIS>
+    | <WEAK>
+    | AccessLevelModifier()
+    | MutationModifier()
+}
+
+//Проверено
+void DeclarationModifiers(): {}
+{
+    DeclarationModifier() (DeclarationModifiers())?
+}
+
+//Проверено
+void AccessLevelModifier(): {}
+{
+    <PRIVATE>
+    | <PRIVATE> <OPEN_PARENTHESIS> <SET> <CLOSED_PARENTHESIS>
+    | <FILEPRIVATE>
+    | <FILEPRIVATE> <OPEN_PARENTHESIS> <SET> <CLOSED_PARENTHESIS>
+    | <INTERNAL>
+    | <INTERNAL> <OPEN_PARENTHESIS> <SET> <CLOSED_PARENTHESIS>
+    | <PUBLIC>
+    | <PUBLIC> <OPEN_PARENTHESIS> <SET> <CLOSED_PARENTHESIS>
+    | <OPEN>
+    | <OPEN> <OPEN_PARENTHESIS> <SET> <CLOSED_PARENTHESIS>
+}
+
+//Проверено
+void MutationModifier(): {}
+{
+    <MUTATING>
+    | <NON_MUTATING>
+}
+
+
+
+/* =====================================================================================================================
+                        6. Attributes
+   ================================================================================================================== */
+
+
+/* ===================================================================
+                        6.1. GRAMMAR OF AN ATTRIBUTE (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void Attribute(): {}
+{
+    <AT> AttributeName() (AttributeArgumentClause())?
+}
+
+// ПРОВЕРЕНО
+void AttributeName(): {}
+{
+    Identifier()
+}
+
+// ПРОВЕРЕНО
+void AttributeArgumentClause(): {}
+{
+    <OPEN_PARENTHESIS> (BalancedTokens())? <CLOSED_PARENTHESIS>
+}
+
+// ПРОВЕРЕНО
+void Attributes(): {}
+{
+    Attribute() (Attributes())?
+}
+
+// ПРОВЕРЕНО
+void BalancedTokens(): {}
+{
+    BalancedToken() (BalancedTokens())?
+}
+
+// TODO: Доделать
+void BalancedToken(): {}
+{
+    <OPEN_PARENTHESIS> (BalancedTokens())? <CLOSED_PARENTHESIS>
+    | <OPEN_SQUARE_BRACKET> (BalancedTokens())? <CLOSED_SQUARE_BRACKET>
+    | <OPEN_BRACKET> (BalancedTokens())? <CLOSED_BRACKET>
+    | Identifier()
+    | Operator()
+}
+
+/* =====================================================================================================================
+                        7. Patterns (DONE)
+   ================================================================================================================== */
+
+/* ===================================================================
+                        7.1. GRAMMAR OF A PATTERN (DONE)
+   =================================================================== */
+
+//Проверено
+void Pattern(): {}
+{
+    (   WildcardPattern() (TypeAnnotation())?
+        | IdentifierPattern() (TypeAnnotation())?
+        | ValueBindingPattern()
+        | TuplePattern() (TypeAnnotation())?
+        | EnumCasePattern()
+        | OptionalPattern()
+        | IsPattern()
+        | ExpressionPattern()
+    ) (SimplePattern())?
+}
+
+//Проверено
+void SimplePattern(): {}
+{
+    AsPattern() (SimplePattern())?
+}
+
+/* ===================================================================
+                        7.2. GRAMMAR OF A WILDCARD PATTERN (DONE)
+   =================================================================== */
+
+//Проверено
+void WildcardPattern(): {}
+{
+    <UNDERSCORE>
+}
+
+/* ===================================================================
+                        7.3. GRAMMAR OF AN IDENTIFIER PATTERN (DONE)
+   =================================================================== */
+
+//Проверено
+void IdentifierPattern(): {}
+{
+    Identifier()
+}
+
+/* ===================================================================
+                        7.4. GRAMMAR OF A VALUE-BINDING PATTERN (DONE)
+   =================================================================== */
+
+//Проверено
+void ValueBindingPattern(): {}
+{
+    <VAR> Pattern()
+    | <LET> Pattern()
+}
+
+/* ===================================================================
+                        7.5 GRAMMAR OF A TUPLE PATTERN (DONE)
+   =================================================================== */
+
+//Проверено
+void TuplePattern(): {}
+{
+    <OPEN_PARENTHESIS> (TuplePatternElementList())? <CLOSED_PARENTHESIS>
+}
+
+//Проверено
+void TuplePatternElementList(): {}
+{
+    TuplePatternElement()
+    | TuplePatternElement() <COMMA> TupleTypeElementList()
+}
+
+//Проверено
+void TuplePatternElement(): {}
+{
+    Pattern()
+    | Identifier() <COLON> Pattern()
+}
+
+/* ===================================================================
+                        7.6. GRAMMAR OF AN ENUMERATION CASE PATTERN (DONE)
+   =================================================================== */
+
+//Проверено
+void EnumCasePattern(): {}
+{
+    (TypeIdentifier())? <DOT> EnumCaseName() (TuplePattern())?
+}
+
+/* ===================================================================
+                        7.7. GRAMMAR OF AN OPTIONAL PATTERN (DONE)
+   =================================================================== */
+
+//Проверено
+void OptionalPattern(): {}
+{
+    IdentifierPattern() <QUESTION_MARK>
+}
+
+
+/* ===================================================================
+                        7.8. GRAMMAR OF A TYPE CASTING PATTERN (DONE)
+   =================================================================== */
+
+//Проверено
+void TypeCastingPattern(): {}
+{
+    IsPattern()
+    | AsPattern()
+}
+
+//Проверено
+void IsPattern(): {}
+{
+    <IS> Type()
+}
+
+//Проверено
+void AsPattern(): {}
+{
+    <AS> Type()
+}
+
+/* ===================================================================
+                        7.9. GRAMMAR OF AN EXPRESSION PATTERN (DONE)
+   =================================================================== */
+
+//Проверено
+void ExpressionPattern(): {}
+{
+    Expression()
+}
+
+
+/* =====================================================================================================================
+                        8. Generic Parameters and Arguments
+   ================================================================================================================== */
+
+
+/* ===================================================================
+                        8.1. GRAMMAR OF A GENERIC PARAMETER CLAUSE (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void GenericParameterClause(): {}
+{
+    <OPEN_TRIANGULAR_BRACKET> GenericParameterList() <CLOSED_TRIANGULAR_BRACKET>
+}
+
+// ПРОВЕРЕНО
+void GenericParameterList(): {}
+{
+    GenericParameter()
+    | GenericParameter() <COMMA> GenericParameterList()
+}
+
+// ПРОВЕРЕНО, переписано на строгую
+void GenericParameter(): {}
+{
+    TypeName() (<COLON> (TypeIdentifier() | ProtocolCompositionType()))?
+}
+
+// ПРОВЕРЕНО
+void GenericWhereClause(): {}
+{
+    <WHERE> RequirementList()
+}
+
+// ПРОВЕРЕНО
+void RequirementList(): {}
+{
+    Requirement()
+    | Requirement() <COMMA> RequirementList()
+}
+
+// ПРОВЕРЕНО
+void Requirement(): {}
+{
+    ConformanceRequirement()
+    | SameTypeRequirement()
+}
+
+// ПРОВЕРЕНО
+void ConformanceRequirement(): {}
+{
+    TypeIdentifier() <COLON> (TypeIdentifier() | ProtocolCompositionType())
+}
+
+// ПРОВЕРЕНО
+void SameTypeRequirement(): {}
+{
+    TypeIdentifier() <EQUALS> Type()
+}
+
+
+/* ===================================================================
+                        8.2. GRAMMAR OF A GENERIC ARGUMENT CLAUSE (ПРОВЕРЕНО)
+   =================================================================== */
+
+// ПРОВЕРЕНО
+void GenericArgumentClause(): {}
+{
+    <OPEN_TRIANGULAR_BRACKET> GenericArgumentList() <CLOSED_TRIANGULAR_BRACKET>
+}
+
+// ПРОВЕРЕНО
+void GenericArgumentList(): {}
+{
+    GenericArgument()
+    | GenericArgument() <COMMA> GenericArgumentList()
+}
+
+// ПРОВЕРЕНО
+void GenericArgument(): {}
+{
+    Type()
+}

@@ -1,0 +1,1041 @@
+options {
+    STATIC = false;
+    DEBUG_PARSER = false;
+    DEBUG_TOKEN_MANAGER = false;
+    JAVA_UNICODE_ESCAPE = false;
+    UNICODE_INPUT = true;
+//    COMMON_TOKEN_ACTION = true;
+}
+
+
+PARSER_BEGIN(RubyParser15)
+
+import java.io.StringReader;
+import java.io.InputStream;
+import java.io.Reader;
+import java.util.ArrayList;
+
+
+public class RubyParser15 {
+
+	private static InputStream input;
+
+	private static boolean inputFromFile = true;
+
+	private static String file1 = Global.filesPath + "code1.rb";
+	private static String file2 = Global.filesPath + "code2.rb";
+	private static String file3 = Global.filesPath + "code3.rb";
+	private static String file4 = Global.filesPath + "code4.rb";
+	private static String file5 = Global.filesPath + "code5.rb";
+	private static String file6 = Global.filesPath + "code6.rb";
+	private static String file7 = Global.filesPath + "code7.rb";
+
+	public int statementCounter = 0;	
+	public int loopCounter = 0;
+	public int conditionsCounter = 0;
+	public ArrayList<MyClass > classes = new ArrayList<MyClass >();
+
+	private int classCounter = 0;
+	private ArrayList<Method > methods = new ArrayList<Method >();
+	private ArrayList<String > attributes = new ArrayList<String >();
+	private ArrayList<String > attributesStack = new ArrayList<String >();
+	
+	private class Metrics {
+		private final static int AMOUNT_OF_METRICS = 23;
+		public long metrics[] = new long[AMOUNT_OF_METRICS];
+	}
+
+	/*  
+	 * A String based constructor for ease of use
+	 */
+	public RubyParser15(String s) {
+		this((Reader)(new StringReader(s))); 
+	}
+   
+	public static void main(String args[]) throws ParseException, TokenMgrError {
+                try {
+                        //String inputProgram = args[0];
+                        //String inputProgram = "def bubble_sort(array) n = array.length loop do swapped = false (n-1).times do |i| if array[i] > array[i+1] array[i], array[i+1] = array[i+1], array[i] swapped = true end end break if not swapped end array end";
+                        //String inputProgram = "puts\n";
+
+                        if (inputFromFile) {
+                                System.out.println("Reading from file " + file7 + " ...");
+                                try {
+                                        input = new java.io.FileInputStream(file7);
+                                } catch (java.io.FileNotFoundException e) {
+                                        System.out.println("File " + file7 + " not found.");
+                                        return;
+                                }
+                        } else {
+                                System.out.println("Reading from standard input ...");
+                                input = System.in;
+                        }
+                        
+                        RubyParser15 parser = new RubyParser15(input);
+                        parser.PROGRAM();
+                        System.out.println("Done!");
+                       // MetricsCounter metricsCounter = new MetricsCounter(file3);
+                        
+                }
+                catch(ParseException e) {
+                        e.printStackTrace();
+                                        }
+                catch(TokenMgrError e) {
+                        e.printStackTrace();
+        }
+    }
+}
+
+PARSER_END(RubyParser15)
+
+
+
+SKIP:
+{
+/* Whitespace */
+  "\t"
+| "\n"
+| "\r"
+| ";"
+| " "
+/* comments */
+| < "#" (~["\r", "\n"])* ("\n" | "\r" | "\r\n")  > // skip single line comments
+| < "/*" > : ML_COMMENT_STATE // skip multiple line comments
+}
+
+<ML_COMMENT_STATE> SKIP :
+{
+  < "*/" > : DEFAULT
+| < ~[] >
+}
+
+
+
+/*
+ * @Token
+ * "|"
+ */
+TOKEN : { <pipe : "|"> }
+
+/*
+ * @Token
+ * "\""
+ */
+TOKEN : { <quote : "\""> }
+
+/*
+ * @Token
+ * "\'"
+ */
+TOKEN : { <apostr : "'"> }
+
+/*
+ * @Token
+ * "\`"
+ */
+TOKEN : { <backapostr : "`"> }
+
+/*
+ * @Token
+ * ":"
+ */
+TOKEN : { <colon : ":"> }
+
+/*
+ * @Token
+ * "="
+ */
+TOKEN : { <equal : "="> }
+
+/*
+ * @Token
+ * "="
+ */
+TOKEN : { <underline : "_"> }
+
+/*
+ * @Token
+ * "+="
+ */
+TOKEN : { <plusequal : "+="> }
+
+/*
+ * @Token
+ * "*="
+ */
+TOKEN : { <starequal : "*="> }
+
+/*
+ * @Token
+ * "/="
+ */
+TOKEN : { <slashequal : "/="> }
+
+/*
+ * @Token
+ * "%="
+ */
+TOKEN : { <percentequal : "%="> }
+
+/*
+ * @Token
+ * "**="
+ */
+TOKEN : { <powerequal : "**="> }
+
+/*
+ * @Token
+ * "-="
+ */
+TOKEN : { <minusequal : "-="> }
+
+/*
+ * @Token
+ * "&="
+ */
+TOKEN : { <amperequal : "&="> }
+
+/*
+ * @Token
+ * "&&="
+ */
+TOKEN : { <andequal : "&&="> }
+
+/*
+ * @Token
+ * "|="
+ */
+TOKEN : { <pipeequal : "|="> }
+
+/*
+ * @Token
+ * "||="
+ */
+TOKEN : { <orequal : "||="> }
+
+/*
+ * @Token
+ * "<<="
+ */
+TOKEN : { <lshiftequal : "<<="> }
+
+/*
+ * @Token
+ * "^="
+ */
+TOKEN : { <caretequal : "^="> }
+
+/*
+ * @Token
+ * "=="
+ */
+TOKEN : { <equal2 : "=="> }
+
+/*
+ * @Token
+ * "==="
+ */
+TOKEN : { <equal3 : "==="> }
+
+/*
+ * @Token
+ * "{"
+ */
+TOKEN : { <lbrace : "{"> }
+
+/*
+ * @Token
+ * "}"
+ */
+TOKEN : { <rbrace : "}"> }
+
+/*
+ * @Token
+ * "@"
+ */
+TOKEN : { <at : "@"> }
+
+/*
+ * @Token
+ * "$"
+ */
+TOKEN : { <dollar : "$"> }
+
+/*
+ * @Token
+ * "+@"
+ */
+TOKEN : { <plusat : "+@"> }
+
+/*
+ * @Token
+ * "-@"
+ */
+TOKEN : { <minusat : "-@"> }
+
+/*
+ * @Token
+ * "["
+ */
+TOKEN : { <lsqbracket : "["> }
+
+/*
+ * @Token
+ * "[]"
+ */
+TOKEN : { <sqbrackets : "[]"> }
+
+/*
+ * @Token
+ * "[]="
+ */
+TOKEN : { <sqbracketsequal : "[]="> }
+
+/*
+ * @Token
+ * "]"
+ */
+TOKEN : { <rsqbracket : "]"> }
+
+/*
+ * @Token
+ * "("
+ */
+TOKEN : { <lparen : "("> }
+
+/*
+ * @Token
+ * ")"
+ */
+TOKEN : { <rparen : ")"> }
+
+/*
+ * @Token
+ * ","
+ */
+TOKEN : { <comma : ","> }
+
+/*
+ * @Token
+ * "!"
+ */
+TOKEN : { <exclamation : "!"> }
+
+/*
+ * @Token
+ * "?"
+ */
+TOKEN : { <question : "?"> }
+
+/*
+ * @Token
+ * "!="
+ */
+TOKEN : { <exclamationequal : "!="> }
+
+/*
+ * @Token
+ * "!~"
+ */
+TOKEN : { <exclamationtilde : "!~"> }
+
+/*
+ * @Token
+ * "!~"
+ */
+TOKEN : { <equaltilde : "=~"> }
+
+/*
+ * @Token
+ * "~"
+ */
+TOKEN : { <tilde : "~"> }
+
+/*
+ * @Token
+ * "<"
+ */
+TOKEN : { <less : "<"> }
+
+/*
+ * @Token
+ * "<<"
+ */
+TOKEN : { <lshift : "<<"> }
+
+/*
+ * @Token
+ * ">"
+ */
+TOKEN : { <more : ">"> }
+
+/*
+ * @Token
+ * ">>"
+ */
+TOKEN : { <rshift : ">>"> }
+
+/*
+ * @Token
+ * "<="
+ */
+TOKEN : { <lessorequal : "<="> }
+
+/*
+ * @Token
+ * ">="
+ */
+TOKEN : { <moreorequal : ">="> }
+
+/*
+ * @Token
+ * " >>="
+ */
+TOKEN : { <rshiftequal : " >>="> }
+
+/*
+ * @Token
+ * "<=>"
+ */
+TOKEN : { <lessequalmore : "<=>"> }
+
+/*
+ * @Token
+ * "=>"
+ */
+TOKEN : { <equalmore : "=>"> }
+
+/*
+ * @Token
+ * "^"
+ */
+TOKEN : { <caret : "^"> }
+
+/*
+ * @Token
+ * "."
+ */
+TOKEN : { <dot : "."> }
+
+/*
+ * @Token
+ * ".."
+ */
+TOKEN : { <dot2 : ".."> }
+
+/*
+ * @Token
+ * "..."
+ */
+TOKEN : { <dot3 : "..."> }
+
+/*
+ * @Token
+ * "+"
+ */
+TOKEN : { <plus : "+"> }
+
+/*
+ * @Token
+ * "-"
+ */
+TOKEN : { <minus : "-"> }
+
+/*
+ * @Token
+ * "*"
+ */
+TOKEN : { <star : "*"> }
+
+/*
+ * @Token
+ * "**"
+ */
+TOKEN : { <power : "**"> }
+
+/*
+ * @Token
+ * "/"
+ */
+TOKEN : { <slash : "/"> }
+
+/*
+ * @Token
+ * "%"
+ */
+TOKEN : { <percent : "%"> }
+
+/*
+ * @Token
+ * "&"
+ */
+TOKEN : { <amper : "&"> }
+
+/*
+ * @Token
+ * "&&"
+ */
+TOKEN : { <and : "&&"> }
+
+/*
+ * @Token
+ * "||"
+ */
+TOKEN : { <or : "||"> }
+
+/*
+ * @Token
+ * "::"
+ */
+TOKEN : { <colon2 : "::"> }
+
+/*
+ * @Token
+ * Keyword "do"
+ */
+TOKEN : { <keyword_do : "do"> }
+
+///*
+// * @Token
+// * Keyword "self"
+// */
+//TOKEN : { <keyword_self : "self"> }
+
+/*
+ * @Token
+ * Keyword "then"
+ */
+TOKEN : { <keyword_then : "then"> }
+
+/*
+ * @Token
+ * Keyword "ensure"
+ */
+TOKEN : { <keyword_ensure : "ensure"> }
+
+/*
+ * @Token
+ * Keyword "defined?"
+ */
+TOKEN : { <keyword_defined : "defined?"> }
+
+/*
+ * @Token
+ * Keyword "begin"
+ */
+TOKEN : { <keyword_begin : "begin"> }
+
+/*
+ * @Token
+ * Keyword "case"
+ */
+TOKEN : { <keyword_case : "case"> }
+
+/*
+ * @Token
+ * Keyword "for"
+ */
+TOKEN : { <keyword_for : "for"> }
+
+/*
+ * @Token
+ * Keyword "class"
+ */
+TOKEN : { <keyword_class : "class"> }
+
+/*
+ * @Token
+ * Keyword "end"
+ */
+TOKEN : { <keyword_end : "end"> }
+
+/*
+ * @Token
+ * Keyword "numeric"
+ */
+TOKEN : { <keyword_numeric : "numeric"> }
+
+/*
+ * @Token
+ * Keyword "BEGIN"
+ */
+TOKEN : { <keyword_BEGIN : "BEGIN"> }
+
+/*
+ * @Token
+ * Keyword "END"
+ */
+TOKEN : { <keyword_END : "END"> }
+
+/*
+ * @Token
+ * Keyword "undef"
+ */
+TOKEN : { <keyword_undef : "undef"> }
+
+/*
+ * @Token
+ * Keyword "rescue"
+ */
+TOKEN : { <keyword_rescue : "rescue"> }
+
+/*
+ * @Token
+ * Keyword "alias"
+ */
+TOKEN : { <keyword_alias : "alias"> }
+
+TOKEN: { < include :  "include" > }
+
+/*
+ * @Token
+ * Keyword "else"
+ */
+TOKEN : { <keyword_else : "else"> }
+
+/*
+ * @Token
+ * Keyword "if"
+ */
+TOKEN : { <keyword_if : "if"> }
+
+/*
+ * @Token
+ * Keyword "in"
+ */
+TOKEN : { <keyword_in : "in"> }
+
+/*
+ * @Token
+ * Keyword "elsif"
+ */
+TOKEN : { <keyword_elsif : "elsif"> }
+
+/*
+ * @Token
+ * Keyword "while"
+ */
+TOKEN : { <keyword_while : "while"> }
+
+/*
+ * @Token
+ * Keyword "module"
+ */
+TOKEN : { <keyword_module : "module"> }
+
+/*
+ * @Token
+ * Keyword "def"
+ */
+TOKEN : { <keyword_def : "def"> }
+
+/*
+ * @Token
+ * Keyword "when"
+ */
+TOKEN : { <keyword_when : "when"> }
+
+/*
+ * @Token
+ * Keyword "unless"
+ */
+TOKEN : { <keyword_unless : "unless"> }
+
+/*
+ * @Token
+ * Keyword "until"
+ */
+TOKEN : { <keyword_until : "until"> }
+
+/*
+ * @Token
+ * Keyword "yield"
+ */
+TOKEN : { <keyword_yield : "yield"> }
+
+///*
+// * @Token
+// * Keyword "nil"
+// */
+//TOKEN : { <keyword_nil : "nil"> }
+
+/*
+ * @Token
+ * Keyword "and"
+ */
+TOKEN : { <keyword_and : "and"> }
+
+/*
+ * @Token
+ * Keyword "or"
+ */
+TOKEN : { <keyword_or : "or"> }
+
+/*
+ * @Token
+ * Keyword "return"
+ */
+TOKEN : { <keyword_return : "return"> }
+
+/*
+ * @Token
+ * Keyword "not"
+ */
+TOKEN : { <keyword_not : "not"> }
+
+/*
+ * @Token
+ * Keyword "super"
+ */
+TOKEN : { <keyword_super : "super"> }
+
+TOKEN: { < keyword_protected : "protected" > }
+TOKEN: { < keyword_public : "public" > }
+TOKEN: { < keyword_private : "private" > }
+TOKEN: { < keyword_times : "times" > }
+
+/*
+ * @Token
+ * identifier
+ */
+//TOKEN: { < identifier:  [<LETTER> ,  "_" ]([ <LETTER>, "_", <DIGITS> ])* > }
+TOKEN: { < identifier: ((< at >)* | < dollar >) (<LETTER> |  "_") (<LETTER> | "_" | <DIGITS>)* > }
+
+
+/*
+ * @Token
+ * Letter
+ */
+TOKEN : { < LETTER	: ["a"-"z", "A"-"Z"]> }
+
+/*
+ * @Token
+ * Digits
+ */
+TOKEN : { < DIGITS :(["0"-"9"])+ > }
+
+
+TOKEN: {< string : (< quote >  ( ~["\""] )* < quote >) | (< apostr >( ~["\'"] )* < apostr >)>}
+
+TOKEN: { < array:  < lsqbracket > ( ~["["] )* < rsqbracket > >}
+
+TOKEN: { < parameters:  < lbrace > ( ~["{"] )* < rbrace > >}
+
+
+/*
+ * @Token
+ * number
+ */
+//TOKEN : { < number : <DIGITS> | <DIGITS> "." <DIGITS> | <DIGITS> "." | "." <DIGITS> > }
+
+/*
+ * @Token
+ * string
+ */
+//TOKEN : { < string : ("`" (~[])* "`") | ("\"" (~[])* "\"") >}
+
+
+
+//TOKEN: { < string: (<RAW_STRING_LITERAL>) | (<INTERPRETED_STRING_LITERAL>)> }
+//TOKEN: { <#RAW_STRING_LITERAL: "`" (~[])* "`"> }
+//TOKEN: { <#INTERPRETED_STRING_LITERAL: "\"" ((<UNICODE_VALUE>) | (<BYTE_VALUE>))* "\""> }
+//
+//TOKEN: { <#UNICODE_VALUE: ( ~["\n"]) | (<LITTLE_U_VALUE>) | (<BIG_U_VALUE>) | (<ESCAPED_CHAR>)> }
+//
+//TOKEN: { <#BYTE_VALUE: (<OCTAL_BYTE_VALUE>) | (<HEX_BYTE_VALUE>)> }
+//TOKEN: {<#OCTAL_BYTE_VALUE: "\\" (["0"-"7"]) (["0"-"7"]) (["0"-"7"])> }
+//TOKEN: { <#HEX_BYTE_VALUE: "\\x" (["0"-"9", "a"-"f", "A"-"F"]) (["0"-"9", "a"-"f", "A"-"F"])> }
+//TOKEN: { <#LITTLE_U_VALUE: "\\u" (["0"-"9", "a"-"f", "A"-"F"]) (["0"-"9", "a"-"f", "A"-"F"])
+//                              (["0"-"9", "a"-"f", "A"-"F"]) (["0"-"9", "a"-"f", "A"-"F"])> }
+//TOKEN: { <#BIG_U_VALUE:  "\\U" (["0"-"9", "a"-"f", "A"-"F"]) (["0"-"9", "a"-"f", "A"-"F"])
+//                            (["0"-"9", "a"-"f", "A"-"F"]) (["0"-"9", "a"-"f", "A"-"F"])
+//                            (["0"-"9", "a"-"f", "A"-"F"]) (["0"-"9", "a"-"f", "A"-"F"])
+//                            (["0"-"9", "a"-"f", "A"-"F"]) (["0"-"9", "a"-"f", "A"-"F"])> }
+//TOKEN: { <#ESCAPED_CHAR: "\\" ( "a" | "b" | "f" | "n" | "r" | "t" | "v" | "\\" | "'" | "\"" )> }
+
+
+/*
+ * @Production
+ * PROGRAM : COMPSTMT
+ */
+void PROGRAM() : 
+{ System.out.println("PROGRAM()"); }
+{
+	COMPSTMT() <EOF> 
+}
+
+
+/*
+ * @Production
+ * COMPSTMT is any amount of statements
+ */
+void COMPSTMT() : 
+{ System.out.println("COMPSTMT()"); }
+{
+	( STMT() )* 
+}
+
+/*
+ * @Production
+ * STMT 
+ */
+
+
+
+void STMT() : 
+{
+  	Token varName = null;
+  	statementCounter ++;
+   	System.out.println("STMT() " + statementCounter);
+   
+}
+{
+  //	{ count++; System.out.println("STMT() " + count);}
+  	
+	   MyClass_BODY()
+	|  MODULE_BODY() //interface body
+	|  FUNCTION_BODY()
+	|  CONDITION_BODY()
+	|  LOOP_BODY()
+	|  EXCEPTION()
+	
+	|  RETURN() 
+	|  ( (varName = <  identifier >) (<comma > <  identifier >)* | < keyword_super >) (< dot > <  identifier >)* (VARIABLE() | FUNCTION_CALL())
+
+	{
+	  	if (varName != null) { 
+		  	String var = varName.toString();
+		  	if (var.startsWith("@")) { System.out.println("Attribute: " + var); attributesStack.add(var);}
+			if (var.startsWith("@") && !attributes.contains(var) ) {
+			  
+			  	attributes.add(var);
+			}
+
+		}
+	}
+	
+}
+
+void MyClass_BODY():
+{
+  	Token t_className = null;
+  	Token t_classNameParent = null;
+  	Token t_interfaceName = null;
+  	ArrayList<String > t_interfacesNames = new ArrayList<String >();
+  	classCounter++;
+  	System.out.println("MyClass_BODY() " + classCounter);
+}
+{
+	// class keyword + class name
+   < keyword_class > (t_className = < identifier > )
+   [< less > (t_classNameParent = < identifier >)]
+   ( < include > (t_interfaceName =  < identifier >) {if (t_interfaceName != null) {  t_interfacesNames.add(t_interfaceName.toString()); }; } )*
+	 COMPSTMT() 
+   < keyword_end >
+
+{
+	  MyClass c = new MyClass(t_className + "");
+	  MyClass parent = new MyClass(t_classNameParent + "");
+	  c.setParent(parent);
+	  c.getInterfaces().addAll(t_interfacesNames);
+	  c.getMethods().addAll(methods);
+	  c.getAttributes().addAll(attributes);
+	  methods.clear();
+	  attributes.clear();
+	  classes.add(c);
+	  System.out.println(
+	  "   class name: " + t_className +
+	  ";	  parent: " + t_classNameParent +
+	  ";	  interf: " + t_interfacesNames +
+	  ";      attributes: " + c.getAttributes());}
+
+}
+
+void MODULE_BODY():
+{{ System.out.println("MODULE_BODY()"); }}
+{	
+	// module keyword + module name
+   <keyword_module> < identifier >[< less > < identifier >] (< include > < identifier >)*  COMPSTMT() < keyword_end >
+}
+
+void FUNCTION_BODY():
+{
+	Token methodName = null;
+}
+{
+   < keyword_def > (methodName = < identifier > [<dot > < identifier >]) [ARGS()] COMPSTMT() < keyword_end >
+
+	{
+	  	Method method = new Method(methodName.toString());
+	  	method.addAttributesUsed(attributesStack);
+	  	attributesStack.clear();
+		methods.add(method);
+  		System.out.println("FUNCTION_BODY() " +  "   " + methods);
+  		
+  	}
+	
+
+}
+
+void ARGS():
+{ System.out.println("ARGS()");}
+{
+	(	  < lparen >  [
+		(< identifier > [FUNCTION_CALL()]| < string > | <DIGITS >) (EXPR())*
+		(< comma >(< identifier > [FUNCTION_CALL()] | < string > | <DIGITS >) (EXPR())*  )*
+		]  < rparen >)
+//		] (FUNCTION_CALL())* < rparen >)
+
+	| < parameters >
+}
+
+void RETURN():
+{ 	Token varName = null;
+	System.out.println("RETURN()");
+}
+{
+   < keyword_return >
+   (
+     
+     LOOKAHEAD(100)  varName = < identifier > [FUNCTION_CALL()]
+   | LOOKAHEAD(100) CONDITION()
+   | LOOKAHEAD(100) ( LOOKAHEAD(100) EXPR())+
+   | LOOKAHEAD(100) < string >
+   | LOOKAHEAD(100) FUNCTION_CALL()
+   | LOOKAHEAD(100) < DIGITS >
+   
+   )
+
+	{
+	  	if (varName != null) { 
+		  	String var = varName.toString();
+		  	if (var.startsWith("@")) { System.out.println("Attribute: " + var);attributesStack.add(var) ;}
+			if (var.startsWith("@") && !attributes.contains(var) ) {
+			  
+			  	attributes.add(var);
+			}
+
+		}
+	}
+
+}
+
+void VARIABLE():
+{
+  Token varName = null;
+  	System.out.println("VARIABLE()"); }
+{
+	< equal >
+	 
+	(		(varName = < identifier > 	[ FUNCTION_CALL()]	 | < DIGITS > | < string >	)
+		(LOOKAHEAD(100) EXPR())*
+
+	| (CONDITION_BODY() |  < array >)
+
+	)
+	
+	
+	{
+	  	  	if (varName != null) { 
+		  	String var = varName.toString();
+		  	if (var.startsWith("@")) { System.out.println("Attribute: " + var); attributesStack.add(var);}
+			if (var.startsWith("@") && !attributes.contains(var) ) {
+			  
+			  	attributes.add(var);
+			}
+
+		}
+	}
+
+
+}
+  
+void FUNCTION_CALL():
+{ System.out.println("FUNCTION CALL()"); }
+{
+
+	ARGS()
+ 	| (< dot > < identifier > FUNCTION_CALL())
+ 	
+
+}
+
+
+
+void CONDITION_BODY():
+{
+  	conditionsCounter++;
+  	System.out.println("CONDITION_BODY()"); }
+{
+  	(  	  < keyword_if > CONDITION() COMPSTMT()  (< keyword_elsif > CONDITION() COMPSTMT())*
+  	  (< keyword_then > ( < string > | COMPSTMT() ))* (< keyword_else > (< string > | COMPSTMT()) )*
+  	  [< keyword_end >])
+	|  (< keyword_unless >  CONDITION()  COMPSTMT() < keyword_end >)
+}
+
+void CONDITION():
+{
+
+  	System.out.println("CONDITION()"); }
+{
+    LOOKAHEAD(100) (      < identifier >  [FUNCTION_CALL()]
+		(< equal2 > | < exclamationequal > | < less > | < more > | < lessorequal > | < moreorequal >)
+		( <  identifier >  [FUNCTION_CALL()] |  < DIGITS > | < string > ) ((<and >| <or >) CONDITION())*)
+	| EXPR() (< equal2 > | < exclamationequal > | < less > | < more > | < lessorequal > | < moreorequal >)
+		( <  identifier >  [FUNCTION_CALL()] |  < DIGITS > | < string > ) ((<and >| <or >) CONDITION())*
+
+}
+
+// TODO ����MyClass_BODY()��
+void EXPR():
+{ 	Token varName = null;
+	System.out.println("EXPR()"); }
+{
+        [(varName = <  identifier > | < keyword_super >) [FUNCTION_CALL()] | < string >  | < DIGITS >]
+  
+// ( LOOKAHEAD(100)    ( < plus > | < minus > | < star > | < power > | < slash > | < percent >)
+    ( (varName = <  identifier > | < keyword_super >) [FUNCTION_CALL()]  | < string >   | < DIGITS > )  
+ //)+
+
+  	{
+	  	if (varName != null) { 
+		  	String var = varName.toString();
+		  	if (var.startsWith("@")) { System.out.println("Attribute: " + var); attributesStack.add(var);}
+			if (var.startsWith("@") && !attributes.contains(var) ) {
+			  
+			  	attributes.add(var);
+			}
+
+		}
+	}
+}
+
+void LOOP_BODY():
+{
+  loopCounter++;
+  System.out.println("LOOP BODY()"); }
+{
+   (     < DIGITS >< dot > < keyword_times > < keyword_do > COMPSTMT() [< keyword_end >])
+  | (< keyword_while > CONDITION()  COMPSTMT() [< keyword_end >])
+  |  < keyword_for > <  identifier > < keyword_in >
+  	(<  identifier >
+  | < lparen >
+  	(   < DIGITS >  |  <  identifier > [FUNCTION_CALL()] )
+   	< dot3 >
+   	(< DIGITS >  |  <  identifier > [FUNCTION_CALL()])
+  	< rparen > )
+  COMPSTMT() < keyword_end >
+
+  
+}
+
+void  EXCEPTION():
+{ System.out.println("EXCEPTION()"); }
+{
+	< keyword_begin > COMPSTMT()
+	<keyword_rescue > <  identifier > < equalmore > <  identifier > COMPSTMT()
+	< keyword_end >
+}
+
+
+

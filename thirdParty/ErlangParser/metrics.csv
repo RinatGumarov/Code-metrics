@@ -1,0 +1,7 @@
+File Name, Lines of Code, Number of Comments, Number of Modules, Number of Imports, Number of Exports
+file_handle_cache.erl,1530,169,61,0,5
+gm.erl,1635,430,59,0,5
+rabbit_amqqueue_process.erl,1532,147,28,0,3
+rabbit_msg_store.erl,2176,462,71,0,5
+rabbit_queue_index.erl,1452,222,73,0,4
+rabbit_variable_queue.erl,2952,448,48,0,6

@@ -1,0 +1,815 @@
+PARSER_BEGIN(Scala)
+
+//package main.parser;
+
+public class Scala {
+
+    public static void main(String args[]) throws ParseException {
+        Scala parser;
+
+        if (args.length == 0) {
+            System.out.println("Scala Parser:  Reading from standard input . . .");
+            parser = new Scala(System.in);
+        } else if (args.length == 1) {
+            System.out.println("Scala Parser:  Reading from file " + args[0] + " . . .");
+            try {
+                parser = new Scala(new java.io.FileInputStream(args[0]));
+            } catch (java.io.FileNotFoundException e) {
+                System.out.println("Scala Parser:  File " + args[0] + " not found.");
+                return;
+            }
+        } else {
+            System.out.println("Scala Parser:  Usage is one of:");
+            System.out.println("         java ScalaParser < inputfile");
+            System.out.println("OR");
+            System.out.println("         java ScalaParser inputfile");
+            return;
+        }
+
+        parser.CompilationUnit();
+        System.out.println("Scala Parser:  Scala program parsed successfully.");
+    }
+}
+
+PARSER_END(Scala)
+
+TOKEN :
+{
+    < UnicodeEscape : "\\" "u" ("u")* <hexDigit> <hexDigit> <hexDigit> <hexDigit> >
+}
+
+TOKEN :
+{
+    < hexDigit : ["0" - "9"] | ["A" - "F"] | ["a" - "f"] >
+}
+
+// Symbols
+TOKEN :
+{
+    < whiteSpace :  "\\u0020" | "\\u0009" | "\\u000D" | "\\u000A" >
+    | < upper :  ["A" - "Z"] | "$" | "_" >
+    | < lower : ["a" - "z"] >
+    | < letter : <upper> | <lower> >
+    | < digit : ["0" - "9"] >
+    | < paren : "(" | ")" | "[" | "]" | "{" | "}" >
+    | < delim : "`" | "'" | "\"" | "." | ";" | "," >
+    | < opchar : (<whiteSpace> | <upper> | <lower> | <letter> | <digit> | <paren> | <delim> | <opchar> | <UnicodeEscape> ) >
+    //| < printableChar : ["\\u0020" - "\\u007F"] >
+    | < charEscapeSeq : "\\" ("b" | "t" | "n" | "f" | "r" | "\"" | "'" | "\\") >
+    | < op : <opchar> (<opchar>)* >
+    | < varid : <lower> <idrest> >
+    | < plainid : <upper> <idrest> | <varid> | <op> >
+    //| < id : <plainid> | "`" ( <charNoBackQuoteOrNewline> | <UnicodeEscape> | <charEscapeSeq> )* "`" >
+    | < id : <plainid> | "`" ( <UnicodeEscape> | <charEscapeSeq> )* "`" >
+    | < idrest : (<letter> | <digit>)* ("_" <op>)? >
+}
+
+// Literals
+TOKEN :
+{
+    < integerLiteral : (<decimalNumeral> | <hexNumeral>) ("L" | "l")? >
+    | < decimalNumeral : "0" | <nonZeroDigit> (<digit>)* >
+    | < hexNumeral : "0" ("x" | "X") <hexDigit> (<hexDigit>)* >
+    //| < digit : "0" | <nonZeroDigit> >
+    | < nonZeroDigit : ["1" - "9"] >
+    | < floatingPointLiteral : <digit> (<digit>)* "." <digit> (<digit>)* (<exponentPart>)? (<floatType>)?
+                         | "." <digit> (<digit>)* (<exponentPart>)? (<floatType>)?
+                         | <digit> (<digit>)* <exponentPart> (<floatType>)?
+                         | <digit> (<digit>)* (<exponentPart>)? <floatType> >
+    | < exponentPart : ("E" | "e") ("+" | "-")? <digit> (<digit>)* >
+    | < floatType : "F" | "f" | "D" | "d" >
+    | < booleanLiteral : "true" | "false" >
+    //| < characterLiteral : "'" (<charNoQuoteOrNewline> | <UnicodeEscape> | <charEscapeSeq>) "'" >
+    | < characterLiteral : "'" (<UnicodeEscape> | <charEscapeSeq>) "'" >
+    | < stringLiteral : "\"" (<stringElement>)* "\"" |  "\"\"\"" <multiLineChars> "\"\"\"" >
+    //| < stringElement : <charNoDoubleQuoteOrNewline> |  <UnicodeEscape> |  <charEscapeSeq> >
+    | < stringElement : <UnicodeEscape> |  <charEscapeSeq> >
+    //| < multiLineChars : (("\"")? ("\"")? <charNoDoubleQuote>)* ("\"")* >
+    | < multiLineChars : ("\"")* >
+    | < symbolLiteral : "'" <plainid> >
+    //| < comment :  "/*" "any" "*/" |  "//" >
+    | < nl : "\n" >
+    | < semi : ";" | <nl> (<nl>)* >
+}
+
+
+
+// Context-free syntax of Scala
+
+void Literal() :
+{}
+{
+    ("-")? <integerLiteral>
+    |  ("-")? <floatingPointLiteral>
+    |  <booleanLiteral>
+    |  <characterLiteral>
+    |  <stringLiteral>
+    |  <symbolLiteral>
+    |  "null"
+}
+
+void QualId() :
+{}
+{
+    <id> ("." <id>)*
+}
+
+void ids() :
+{}
+{
+    <id> ("," <id>)?
+}
+
+void Path() :
+{}
+{
+    StableId() | (<id> ".")? "this"
+}
+
+void StableId() :
+{}
+{
+    <id>
+    | Path() "." <id>
+    | (<id> ".")? "super" (ClassQualifier())? "." <id>
+}
+
+
+void ClassQualifier() : {}
+{
+    "[" <id> "]"
+}
+
+void Type() :
+{}
+{
+    FunctionArgTypes() "=>" Type()
+    | InfixType() (ExistentialClause())?
+}
+
+void FunctionArgTypes() :
+{}
+{
+    InfixType()
+    | "(" ( ParamType() ("," ParamType() )* )? ")"
+}
+
+void ExistentialClause() :
+{}
+{
+    "forSome" "{" ExistentialDcl() (<semi> ExistentialDcl())* "}"
+}
+
+void ExistentialDcl() :
+{}
+{
+    "type" TypeDcl()
+    | "val" ValDcl()
+}
+
+void InfixType() :
+{}
+{
+    CompoundType() (<id> (<nl>)? CompoundType())*
+}
+
+void CompoundType() :
+{}
+{
+    AnnotType() ("with" AnnotType())* (Refinement())?
+    | Refinement()
+}
+
+void AnnotType() :
+{}
+{
+    SimpleType() (Annotation())?
+}
+
+void SimpleType() :
+{}
+{
+    SimpleType() TypeArgs()
+    |  SimpleType() "#" <id>
+    |  StableId()
+    |  Path() "." "type"
+    |  "(" Types() ")"
+}
+
+void TypeArgs() :
+{}
+{
+    "[" Types() "]"
+}
+
+void Types() :
+{}
+{
+    Type() ("," Type())*
+}
+
+void Refinement() :
+{}
+{
+    (<nl>)? "{" RefineStat() (<semi> RefineStat())* "}"
+}
+
+void RefineStat() :
+{}
+{
+    Dcl()
+    |  "type" TypeDef()
+}
+
+void TypePat() :
+{}
+{
+    Type()
+}
+
+void Ascription() :
+{}
+{
+    ":" InfixType()
+    |  ":" Annotation() (Annotation())*
+    |  ":" "_" "*"
+}
+
+void Expr() :
+{}
+{
+    (Bindings() | ("implicit")? <id> | "_") "=>" Expr()
+    | Expr1()
+}
+
+void Expr1() :
+{}
+{
+    "if" "(" Expr() ")" (<nl>)* Expr() ((<semi>)? "else" Expr())?
+    | "while" "(" Expr() ")" (<nl>)* Expr()
+    | "try" ("{" Block() "}" | Expr()) ("catch" "{" CaseClauses() "}")? ("finally" Expr())?
+    | "do" Expr() (<semi>)? "while" "(" Expr() ")"
+    | "for" ("(" Enumerators() ")" | "{" Enumerators() "}") (<nl>)* ("yield")? Expr()
+    | "throw" Expr()
+    | "return" (Expr())?
+    | (SimpleExpr() ".")? <id> "=" Expr()
+    | SimpleExpr1() ArgumentExprs() "=" Expr()
+    | PostfixExpr()
+    | PostfixExpr() Ascription()
+    | PostfixExpr() "match" "{" CaseClauses() "}"
+}
+
+void PostfixExpr() :
+{}
+{
+    InfixExpr() (<id> (<nl>)?)?
+}
+
+void InfixExpr() :
+{}
+{
+    PrefixExpr()
+    | InfixExpr() <id> (<nl>)? InfixExpr()
+}
+
+void PrefixExpr() :
+{}
+{
+    ("-" | "+" | "~" | "!")? SimpleExpr()
+}
+
+void SimpleExpr() :
+{}
+{   "new" (ClassTemplate() | TemplateBody())
+    | BlockExpr()
+    | SimpleExpr1() ("_")?
+}
+
+void SimpleExpr1() :
+{}
+{
+    Literal()
+    | Path()
+    | "_"
+    | "(" (Exprs())? ")"
+    | SimpleExpr() "." <id>
+    | SimpleExpr() TypeArgs()
+    | SimpleExpr1() ArgumentExprs()
+    //| XmlExpr()
+}
+
+void Exprs() :
+{}
+{
+    Expr() ("," Expr())*
+}
+
+void ArgumentExprs() :
+{}
+{
+    "(" (Exprs())? ")"
+    | "(" (Exprs() ",")? PostfixExpr() ":" "_" "*" ")"
+    | (<nl>)? BlockExpr()
+}
+
+void BlockExpr() :
+{}
+{
+    "{" CaseClauses() "}"
+    | "{" Block() "}"
+}
+
+void Block() :
+{}
+{
+    BlockStat() (<semi> BlockStat())* (ResultExpr())?
+}
+
+void BlockStat() :
+{}
+{
+    Import()
+    | (Annotation())* ("implicit" | "lazy")? Def()
+    | (Annotation())* (LocalModifier())* TmplDef()
+    | Expr1()
+}
+
+void ResultExpr() :
+{}
+{
+    Expr1()
+    | (Bindings() | (("implicit")? <id> | "_") ":" CompoundType()) "=>" Block()
+}
+
+void Enumerators() :
+{}
+{
+    Generator() (<semi> Generator())*
+}
+
+void Generator() :
+{}
+{
+    Pattern1() "<-" Expr() ((<semi>)? Guard() | <semi> Pattern1() "=" Expr())*
+}
+
+void CaseClauses() :
+{}
+{
+    CaseClause() ( CaseClause() )*
+}
+
+void CaseClause() :
+{}
+{
+    "case" Pattern() (Guard())? "=>" Block()
+}
+
+void Guard() :
+{}
+{
+    "if" PostfixExpr()
+}
+
+void Pattern() :
+{}
+{
+    Pattern1() ( "|" Pattern1() )*
+}
+
+void Pattern1() :
+{}
+{
+    <varid> ":" TypePat()
+    | "_" ":" TypePat()
+    | Pattern2()
+}
+
+void Pattern2() :
+{}
+{
+    <varid> ("@" Pattern3())?
+    | Pattern3()
+}
+
+void Pattern3() :
+{}
+{
+    SimplePattern()
+    | SimplePattern() ( <id> [<nl>] SimplePattern() )*
+}
+
+void SimplePattern() :
+{}
+{
+    "_"
+    | <varid>
+    | Literal()
+    | StableId()
+    | StableId() "(" (Patterns())? ")"
+    | StableId() "(" (Patterns() ",")? (<varid> "@")? "_" "*" ")"
+    | "(" (Patterns())? ")"
+    //| XmlPattern()
+}
+
+void Patterns() :
+{}
+{
+    Pattern() ("," Patterns())?
+    | "_" "*"
+}
+
+void TypeParamClause() :
+{}
+{
+    "[" VariantTypeParam() ("," VariantTypeParam())* "]"
+}
+
+void FunTypeParamClause() :
+{}
+{
+    "[" TypeParam() ("," TypeParam())* "]"
+}
+
+void VariantTypeParam() :
+{}
+{
+    (Annotation())* ("+" | "-")? TypeParam()
+}
+
+void TypeParam() :
+{}
+{
+    (<id> | "_") (TypeParamClause())? (">:" Type())? ("<:" Type())? ("<%" Type())* (":" Type())*
+}
+
+void ParamClauses() :
+{}
+{
+    (ParamClause())* ((<nl>)? "(" "implicit" Params() ")")?
+}
+
+void ParamClause() :
+{}
+{
+    (<nl>)? "(" (Params())? ")"
+}
+
+void Params() :
+{}
+{
+    Param() ("," Param())*
+}
+
+void Param() :
+{}
+{
+    (Annotation())* <id> (":" ParamType())? ("=" Expr())?
+}
+
+void ParamType() :
+{}
+{
+    Type()
+    | "=>" Type()
+    | Type() "*"
+}
+
+void ClassParamClauses() :
+{}
+{
+    (ClassParamClause())* ((<nl>)? "(" "implicit" ClassParams() ")")?
+}
+
+void ClassParamClause() :
+{}
+{
+    (<nl>)? "(" (ClassParams())? ")"
+}
+
+void ClassParams() :
+{}
+{
+    ClassParam() ("," ClassParam())*
+}
+
+void ClassParam() :
+{}
+{
+    (Annotation())* (Modifier())* (("val" | "var"))? <id> ":" ParamType() ("=" Expr())?
+}
+
+void Bindings() :
+{}
+{
+    "(" Binding() ("," Binding())* ")"
+}
+
+void Binding() :
+{}
+{
+    (<id> | "_") (":" Type())?
+}
+
+void Modifier() :
+{}
+{
+    LocalModifier()
+    | AccessModifier()
+    | "override"
+}
+
+void LocalModifier() :
+{}
+{
+    "abstract"
+    | "final"
+    | "sealed"
+    | "implicit"
+    | "lazy"
+}
+
+void AccessModifier() :
+{}
+{
+    ("private" | "protected") (AccessQualifier())?
+}
+
+void AccessQualifier() :
+{}
+{
+    "[" (<id> | "this") "]"
+}
+
+void Annotation() :
+{}
+{
+    "@" SimpleType() (ArgumentExprs())*
+}
+
+void ConstrAnnotation() :
+{}
+{
+    "@" SimpleType() ArgumentExprs()
+}
+
+void TemplateBody() :
+{}
+{
+    (<nl>)? "{" (SelfType())? TemplateStat() (<semi> TemplateStat())* "}"
+}
+
+void TemplateStat() :
+{}
+{
+    Import()
+    | (Annotation() (<nl>)?)* (Modifier())* Def()
+    | (Annotation() (<nl>)?)* (Modifier())* Dcl()
+    | Expr()
+}
+
+void SelfType() :
+{}
+{
+    <id> (":" Type())? "=>"
+    | "this" ":" Type() "=>"
+}
+
+void Import() :
+{}
+{
+    "import" ImportExpr() ("," ImportExpr())*
+}
+
+void ImportExpr() :
+{}
+{
+    StableId() "." (<id> | "_" | ImportSelectors())
+}
+
+void ImportSelectors() :
+{}
+{
+    "{" (ImportSelector() ",")* (ImportSelector() | "_") "}"
+}
+
+void ImportSelector() :
+{}
+{
+    <id> ("=>" <id> | "=>" "_")?
+}
+
+void Dcl() :
+{}
+{
+    "val" ValDcl()
+    | "var" VarDcl()
+    | "def" FunDcl()
+    | "type" (<nl>)* TypeDcl()
+}
+
+void ValDcl() :
+{}
+{
+    ids() ":" Type()
+}
+
+void VarDcl() :
+{}
+{
+    ids() ":" Type()
+}
+
+void FunDcl() :
+{}
+{
+    FunSig() (":" Type())?
+}
+
+void FunSig() :
+{}
+{
+    <id> (FunTypeParamClause())? ParamClauses()
+}
+
+void TypeDcl() :
+{}
+{
+    <id> (TypeParamClause())? (">:" Type())? ("<:" Type())?
+}
+
+void PatVarDef() :
+{}
+{
+    "val" PatDef()
+    | "var" VarDef()
+}
+
+void Def() :
+{}
+{
+    PatVarDef()
+    | "def" FunDef()
+    | "type" (<nl>)* TypeDef()
+    | TmplDef()
+}
+
+void PatDef() :
+{}
+{
+    Pattern2() ("," Pattern2())* (":" Type())? "=" Expr()
+}
+
+void VarDef() :
+{}
+{
+    PatDef()
+    | ids() ":" Type() "=" "_"
+}
+
+void FunDef() :
+{}
+{
+    FunSig() (":" Type())? "=" Expr()
+    | FunSig() (<nl>)? "{" Block() "}"
+    | "this" ParamClause() ParamClauses() ("=" ConstrExpr() | (<nl>)? ConstrBlock())
+}
+
+void TypeDef() :
+{}
+{
+    <id> (TypeParamClause())? "=" Type()
+}
+
+void TmplDef() :
+{}
+{
+    ("case")? "class" ClassDef()
+    | ("case")? "object" ObjectDef()
+    | "trait" TraitDef()
+}
+
+void ClassDef() :
+{}
+{
+    <id> (TypeParamClause())? (ConstrAnnotation())* (AccessModifier())?
+    ClassParamClauses() ClassTemplateOpt()
+}
+
+void TraitDef() :
+{}
+{
+    <id> (TypeParamClause())? TraitTemplateOpt()
+}
+
+void ObjectDef() :
+{}
+{
+    <id> ClassTemplateOpt()
+}
+
+void ClassTemplateOpt() :
+{}
+{
+    "extends" ClassTemplate() | (("extends")? TemplateBody())?
+}
+
+void TraitTemplateOpt() :
+{}
+{
+    "extends" TraitTemplate() | (("extends")? TemplateBody())?
+}
+
+void ClassTemplate() :
+{}
+{
+    (EarlyDefs())? ClassParents() (TemplateBody())?
+}
+
+void TraitTemplate() :
+{}
+{
+    (EarlyDefs())? TraitParents() (TemplateBody())?
+}
+
+void ClassParents() :
+{}
+{
+    Constr() ("with" AnnotType())*
+}
+
+void TraitParents() :
+{}
+{
+    AnnotType() ("with" AnnotType())*
+}
+
+void Constr() :
+{}
+{
+    AnnotType() (ArgumentExprs())*
+}
+
+void EarlyDefs() :
+{}
+{
+    "{" (EarlyDef() (<semi> EarlyDef())*)? "}" "with"
+}
+
+void EarlyDef() :
+{}
+{
+    (Annotation() (<nl>)?)* (Modifier())* PatVarDef()
+}
+
+void ConstrExpr() :
+{}
+{
+    SelfInvocation()
+    | ConstrBlock()
+}
+
+void ConstrBlock() :
+{}
+{
+    "{" SelfInvocation() (<semi> BlockStat())* "}"
+}
+
+void SelfInvocation() :
+{}
+{
+    "this" ArgumentExprs() (ArgumentExprs())*
+}
+
+void TopStatSeq() :
+{}
+{
+    TopStat() (<semi> TopStat())*
+}
+
+void TopStat() :
+{}
+{
+    (Annotation() (<nl>)?)* (Modifier())* TmplDef()
+    | Import()
+    | Packaging()
+    | PackageObject()
+}
+
+void Packaging() :
+{}
+{
+    "package" QualId() (<nl>)? "{" TopStatSeq() "}"
+}
+
+void PackageObject() :
+{}
+{
+    "package" "object" ObjectDef()
+}
+
+void CompilationUnit() :
+{}
+{
+    ("package" QualId() <semi>)* TopStatSeq()
+}

@@ -1,0 +1,20 @@
+File name; Total variables; Total constant; Total loops; Total classes; Total conditions; Total functions
+
+
+ClassesCounter.swift;3;3;0;7;0;6
+
+ConditionCount.swift;0;0;0;0;2;1
+
+ConstantCount.swift;0;3;0;0;0;1
+
+
+
+
+FunctionCount.swift;6;4;0;4;0;6
+
+
+
+LoopCount.swift;3;0;6;3;1;2
+
+VariablesCount.swift;3;0;0;0;0;1
+

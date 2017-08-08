@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="PHPParser:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/PHPParser_jar</output-path>
+    <root id="archive" name="PHPParser.jar">
+      <element id="module-output" name="PHPParser" />
+    </root>
+  </artifact>
+</component>

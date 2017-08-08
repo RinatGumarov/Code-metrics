@@ -1,0 +1,5 @@
+.idea/
+lib/
+out/
+src/csmc/javacc/generated/jtb.out.jj
+CSharpMetricsCollectorJava.iml
